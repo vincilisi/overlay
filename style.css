@@ -1,0 +1,1005 @@
+/* Reset e base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: transparent;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    min-width: 800px;
+    min-height: 600px;
+}
+
+
+/* Contenitore principale */
+.overlay-container {
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+    background: linear-gradient(135deg, rgba(139, 195, 74, 0.1) 0%, rgba(76, 175, 80, 0.1) 100%);
+    transform-origin: top left;
+    transform: scale(calc(min(100vw / 1920, 100vh / 1080)));
+}
+
+/* Auto-scaling per finestre più piccole */
+@media (max-width: 1920px),
+(max-height: 1080px) {
+    .overlay-container {
+        transform: scale(calc(min(100vw / 1920, 100vh / 1080)));
+    }
+}
+
+/* Scaling per finestre molto piccole (come anteprima Streamlabs) */
+@media (max-width: 1200px),
+(max-height: 800px) {
+    .overlay-container {
+        transform: scale(calc(min(100vw / 1920, 100vh / 1080) * 0.8));
+    }
+}
+
+/* Cornice principale */
+.main-frame {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    border: 4px solid #8BC34A;
+    border-radius: 20px;
+    background: linear-gradient(45deg, rgba(255, 235, 59, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%);
+    box-shadow:
+        0 0 20px rgba(139, 195, 74, 0.3),
+        inset 0 0 20px rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(2px);
+}
+
+/* Angoli decorativi */
+.corner {
+    position: absolute;
+    font-size: 2.5rem;
+    z-index: 10;
+    animation: gentle-bounce 3s ease-in-out infinite;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.corner.top-left {
+    top: -15px;
+    left: -15px;
+    animation-delay: 0s;
+}
+
+.corner.top-right {
+    top: -15px;
+    right: -15px;
+    animation-delay: 0.5s;
+}
+
+.corner.bottom-left {
+    bottom: -15px;
+    left: -15px;
+    animation-delay: 1s;
+}
+
+.corner.bottom-right {
+    bottom: -15px;
+    right: -15px;
+    animation-delay: 1.5s;
+}
+
+/* Decorazioni dei bordi */
+.border-decoration {
+    position: absolute;
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    justify-content: center;
+}
+
+.border-decoration.top {
+    top: -25px;
+    left: 10%;
+    right: 10%;
+    height: 50px;
+}
+
+.border-decoration.bottom {
+    bottom: -25px;
+    left: 10%;
+    right: 10%;
+    height: 50px;
+}
+
+.border-decoration.left {
+    left: -25px;
+    top: 20%;
+    bottom: 20%;
+    width: 50px;
+    flex-direction: column;
+}
+
+.border-decoration.right {
+    right: -25px;
+    top: 20%;
+    bottom: 20%;
+    width: 50px;
+    flex-direction: column;
+}
+
+.plant-icon {
+    font-size: 2rem;
+    animation: plant-sway 4s ease-in-out infinite;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    cursor: default;
+    transition: transform 0.3s ease;
+}
+
+.plant-icon:hover {
+    transform: scale(1.2);
+}
+
+.plant-icon:nth-child(odd) {
+    animation-delay: 0.5s;
+}
+
+.plant-icon:nth-child(even) {
+    animation-delay: 1s;
+}
+
+/* Frame webcam */
+.webcam-frame {
+    position: absolute;
+    top: 60px;
+    right: 60px;
+    width: 320px;
+    height: 240px;
+    background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+    border-radius: 15px;
+    border: 3px solid #2E7D32;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.webcam-border {
+    width: 100%;
+    height: 100%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.webcam-title {
+    background: rgba(46, 125, 50, 0.9);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 10px 10px 0 0;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 0;
+    font-family: 'Fredoka One', cursive;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Pannello informazioni */
+.info-panel {
+    position: absolute;
+    top: 60px;
+    left: 60px;
+    width: 280px;
+    background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
+    border-radius: 15px;
+    border: 3px solid #F57C00;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: visible;
+    z-index: 10;
+}
+
+.info-title {
+    background: #E65100;
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-weight: 700;
+    font-family: 'Fredoka One', cursive;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.info-content {
+    padding: 15px;
+    position: relative;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.stat-item:hover {
+    transform: translateX(5px);
+}
+
+.stat-icon {
+    font-size: 1.2rem;
+    margin-right: 10px;
+}
+
+.stat-text {
+    flex: 1;
+    font-weight: 600;
+    color: #3E2723;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: #1B5E20;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* Stili per la sezione semi espandibile */
+.seeds-item {
+    cursor: pointer;
+    position: relative;
+}
+
+.seeds-item:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.expand-arrow {
+    margin-left: 8px;
+    font-size: 0.8rem;
+    color: #4CAF50;
+    transition: transform 0.3s ease;
+}
+
+.seeds-item.expanded .expand-arrow {
+    transform: rotate(180deg);
+}
+
+/* Mini box dei semi */
+.seeds-box {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+    border-radius: 12px;
+    border: 3px solid #2E7D32;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 0;
+    overflow: hidden;
+}
+
+.seeds-box.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(8px);
+    max-height: 400px;
+}
+
+.seeds-box-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(46, 125, 50, 0.9);
+    border-radius: 10px 10px 0 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.seeds-title {
+    color: white;
+    font-weight: 700;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.9rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.seeds-close {
+    color: white;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 2px 6px;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+}
+
+.seeds-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Modalità Live - Semi sempre visibili */
+.live-mode .seeds-box {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(8px) !important;
+    max-height: 400px !important;
+    position: relative !important;
+}
+
+.live-mode .seeds-item .expand-arrow {
+    transform: rotate(180deg);
+    color: #4CAF50;
+}
+
+.live-mode .seeds-item {
+    background: rgba(76, 175, 80, 0.2);
+    border-left: 4px solid #4CAF50;
+}
+
+.live-mode .seeds-close {
+    display: none;
+    /* Nasconde il pulsante X in modalità live */
+}
+
+.seeds-grid {
+    padding: 15px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.seed-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    min-height: 80px;
+    justify-content: space-between;
+}
+
+.seed-item:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.seed-icon {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.seed-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #1B5E20;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.seed-count {
+    font-size: 0.6rem;
+    color: #2E7D32;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 1px 4px;
+    border-radius: 6px;
+    margin-top: 2px;
+}
+
+.seed-price {
+    font-size: 0.55rem;
+    color: #FF8F00;
+    font-weight: 700;
+    background: rgba(255, 193, 7, 0.2);
+    padding: 1px 3px;
+    border-radius: 4px;
+    margin-top: 1px;
+    text-align: center;
+}
+
+/* Scrollbar personalizzata per la griglia dei semi */
+.seeds-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.seeds-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.seeds-grid::-webkit-scrollbar-thumb {
+    background: rgba(46, 125, 50, 0.6);
+    border-radius: 3px;
+}
+
+.seeds-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(46, 125, 50, 0.8);
+}
+
+/* Pannello ricette */
+.recipe-panel {
+    position: absolute;
+    bottom: 60px;
+    left: 60px;
+    width: 300px;
+    background: linear-gradient(135deg, #E91E63 0%, #F48FB1 100%);
+    border-radius: 15px;
+    border: 3px solid #C2185B;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.recipe-title {
+    background: #AD1457;
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-weight: 700;
+    font-family: 'Fredoka One', cursive;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.recipe-content {
+    padding: 15px;
+}
+
+.recipe-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.recipe-icon {
+    font-size: 1.5rem;
+    margin-right: 12px;
+}
+
+.recipe-name {
+    font-weight: 700;
+    color: #4A148C;
+    font-size: 1.1rem;
+}
+
+.recipe-ingredients {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ingredient {
+    background: rgba(255, 255, 255, 0.3);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2E0037;
+}
+
+/* Area notifiche */
+.notification-area {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+}
+
+.notification {
+    background: linear-gradient(135deg, #9C27B0 0%, #E1BEE7 100%);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 25px;
+    border: 3px solid #7B1FA2;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: 'Fredoka One', cursive;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    animation: notification-appear 0.5s ease-out;
+}
+
+.notification.hidden {
+    display: none;
+}
+
+.notif-icon {
+    font-size: 2rem;
+    animation: icon-spin 2s linear infinite;
+}
+
+/* Barra del tempo */
+.weather-bar {
+    position: absolute;
+    bottom: 60px;
+    right: 60px;
+    background: linear-gradient(135deg, #03A9F4 0%, #81D4FA 100%);
+    border-radius: 15px;
+    border: 3px solid #0277BD;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.weather-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.weather-icon {
+    font-size: 1.5rem;
+    animation: weather-pulse 2s ease-in-out infinite;
+}
+
+.weather-text {
+    font-weight: 600;
+    color: #01579B;
+    font-family: 'Fredoka One', cursive;
+}
+
+.weather-temp {
+    background: rgba(255, 255, 255, 0.3);
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-weight: 700;
+    color: #004D70;
+}
+
+/* Decorazioni fluttuanti */
+.floating-decorations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.floating-item {
+    position: absolute;
+    font-size: 2rem;
+    animation: float-around 15s linear infinite;
+    animation-delay: var(--delay);
+    left: var(--x);
+    opacity: 0.7;
+}
+
+/* Animazioni */
+@keyframes gentle-bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes plant-sway {
+
+    0%,
+    100% {
+        transform: rotate(-2deg);
+    }
+
+    50% {
+        transform: rotate(2deg);
+    }
+}
+
+@keyframes float-around {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+    }
+
+    100% {
+        transform: translateY(-100px) rotate(360deg);
+    }
+}
+
+@keyframes notification-appear {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(180deg);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes icon-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes weather-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Effetti hover per interattività */
+.info-panel:hover,
+.recipe-panel:hover,
+.webcam-frame:hover,
+.weather-bar:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+}
+
+/* Media queries per responsività */
+@media (max-width: 1600px) {
+    .webcam-frame {
+        width: 280px;
+        height: 210px;
+    }
+
+    .info-panel,
+    .recipe-panel {
+        width: 250px;
+    }
+
+    .corner {
+        font-size: 2rem;
+    }
+
+    .plant-icon {
+        font-size: 1.5rem;
+    }
+}
+
+/* Effetti speciali */
+.main-frame::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #8BC34A, #4CAF50, #FF9800, #E91E63, #9C27B0, #03A9F4);
+    border-radius: 22px;
+    z-index: -1;
+    animation: rainbow-border 8s linear infinite;
+    opacity: 0.6;
+}
+
+@keyframes rainbow-border {
+    0% {
+        filter: hue-rotate(0deg);
+    }
+
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}
+
+/* ========================================
+   ADATTAMENTI RESPONSIVE
+   ======================================== */
+
+/* Adattamento per risoluzioni più piccole */
+@media (max-width: 1600px) {
+    body {
+        width: 1600px;
+        height: 900px;
+    }
+
+    .webcam-frame {
+        width: 260px;
+        height: 195px;
+        top: 50px;
+        right: 50px;
+    }
+
+    .info-panel,
+    .recipe-panel {
+        width: 240px;
+        top: 50px;
+        left: 50px;
+    }
+
+    .recipe-panel {
+        bottom: 50px;
+    }
+
+    .weather-bar {
+        bottom: 50px;
+        right: 50px;
+    }
+
+    .corner {
+        font-size: 2rem;
+    }
+
+    .plant-icon {
+        font-size: 1.4rem;
+    }
+}
+
+/* Adattamento per streaming 720p */
+@media (max-width: 1280px) {
+    body {
+        width: 1280px;
+        height: 720px;
+    }
+
+    .main-frame {
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        bottom: 15px;
+    }
+
+    .webcam-frame {
+        width: 220px;
+        height: 165px;
+        top: 40px;
+        right: 40px;
+    }
+
+    .info-panel,
+    .recipe-panel {
+        width: 200px;
+        top: 40px;
+        left: 40px;
+    }
+
+    .recipe-panel {
+        bottom: 40px;
+    }
+
+    .weather-bar {
+        bottom: 40px;
+        right: 40px;
+        padding: 8px 15px;
+    }
+
+    .corner {
+        font-size: 1.8rem;
+    }
+
+    .plant-icon {
+        font-size: 1.2rem;
+    }
+
+    .seeds-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-height: 250px;
+    }
+}
+
+/* Modalità COMPATTA per overlay piccoli */
+.overlay-compact {
+    transform: scale(0.7);
+    transform-origin: top left;
+}
+
+.overlay-compact .webcam-frame {
+    width: 180px;
+    height: 135px;
+}
+
+.overlay-compact .info-panel,
+.overlay-compact .recipe-panel {
+    width: 180px;
+}
+
+.overlay-compact .seeds-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    padding: 10px;
+}
+
+/* Modalità BROWSER - ottimizzata per browser web */
+.overlay-browser .overlay-container {
+    width: 95vw;
+    height: 95vh;
+    transform: none !important;
+    margin: 2.5vh auto;
+    overflow: visible;
+    position: relative;
+}
+
+.overlay-browser .main-frame {
+    position: relative;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+}
+
+.overlay-browser .recipe-panel {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    width: 280px;
+    z-index: 100;
+    transform: translateY(-50%);
+}
+
+.overlay-browser .info-panel {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    width: 280px;
+    z-index: 100;
+}
+
+.overlay-browser .webcam-frame {
+    position: absolute;
+    top: 60px;
+    right: 320px;
+    z-index: 100;
+}
+
+/* Modalità MINIMAL - solo elementi essenziali */
+.overlay-minimal .main-frame,
+.overlay-minimal .corner,
+.overlay-minimal .border-decoration,
+.overlay-minimal .floating-decorations {
+    display: none;
+}
+
+.overlay-minimal .info-panel {
+    background: rgba(255, 152, 0, 0.9);
+    border: 2px solid #F57C00;
+}
+
+.overlay-minimal .recipe-panel {
+    background: rgba(233, 30, 99, 0.9);
+    border: 2px solid #C2185B;
+}
+
+.overlay-minimal .webcam-frame {
+    background: rgba(76, 175, 80, 0.9);
+    border: 2px solid #2E7D32;
+}
+
+/* Modalità SOLO SEMI - per focus sulla box semi */
+.overlay-seeds-only .recipe-panel,
+.overlay-seeds-only .weather-bar,
+.overlay-seeds-only .webcam-frame {
+    display: none;
+}
+
+.overlay-seeds-only .info-panel {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+}
+
+/* Adattamenti per diverse piattaforme */
+
+/* Configurazione STREAMLABS */
+.streamlabs-config {
+    background: transparent !important;
+}
+
+.streamlabs-config body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+/* Configurazione OBS */
+.obs-config {
+    pointer-events: none;
+}
+
+.obs-config .seeds-item {
+    pointer-events: all;
+}
+
+/* Configurazione MOBILE/TABLET */
+@media (max-width: 768px) {
+    body {
+        width: 100vw;
+        height: 100vh;
+    }
+
+    .overlay-container {
+        padding: 10px;
+    }
+
+    .info-panel,
+    .recipe-panel,
+    .webcam-frame {
+        position: relative;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .weather-bar {
+        position: relative;
+        width: 100%;
+    }
+
+    .main-frame {
+        position: relative;
+        border: 2px solid #8BC34A;
+    }
+
+    .corner,
+    .border-decoration {
+        display: none;
+    }
+}
+
+/* Configurazioni TEMA */
+
+/* Tema SCURO */
+.theme-dark .overlay-container {
+    background: linear-gradient(135deg, rgba(33, 33, 33, 0.9) 0%, rgba(66, 66, 66, 0.9) 100%);
+}
+
+.theme-dark .main-frame {
+    border-color: #4CAF50;
+    background: linear-gradient(45deg, rgba(33, 33, 33, 0.8) 0%, rgba(66, 66, 66, 0.8) 100%);
+}
+
+/* Tema NATALIZIO */
+.theme-christmas .main-frame {
+    border-color: #D32F2F;
+    background: linear-gradient(45deg, rgba(139, 195, 74, 0.1) 0%, rgba(255, 87, 34, 0.1) 100%);
+}
+
+.theme-christmas .corner {
+    filter: hue-rotate(120deg);
+}
+
+/* Configurazioni PERFORMANCE */
+
+/* Modalità ALTA PERFORMANCE - meno animazioni */
+.performance-mode .floating-decorations,
+.performance-mode .corner,
+.performance-mode .main-frame::before {
+    display: none;
+}
+
+.performance-mode * {
+    animation: none !important;
+    transition: none !important;
+}
