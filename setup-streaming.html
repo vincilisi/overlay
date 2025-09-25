@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Stardew Valley Stream Setup</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .setup-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            font-family: Arial, sans-serif;
+        }
+        
+        .setup-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            color: white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        .setup-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .setup-header h2 {
+            margin: 10px 0;
+            font-size: 28px;
+        }
+        
+        .platform-setup {
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            border-left: 5px solid;
+        }
+        
+        .twitch-setup {
+            border-left-color: #9146ff;
+        }
+        
+        .tiktok-setup {
+            border-left-color: #000;
+        }
+        
+        .platform-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .platform-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        
+        .step-list {
+            margin: 15px 0;
+        }
+        
+        .step-item {
+            margin: 8px 0;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+        
+        .step-number {
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            text-align: center;
+            line-height: 20px;
+            margin-right: 8px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .api-input-group {
+            margin: 15px 0;
+        }
+        
+        .api-input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .api-input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            box-sizing: border-box;
+        }
+        
+        .api-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        
+        .help-link {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: white;
+            font-size: 12px;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        
+        .help-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .setup-buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .setup-btn {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s;
+        }
+        
+        .setup-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .skip-btn {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+        }
+        
+        .status-message {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .status-success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid #4CAF50;
+        }
+        
+        .status-error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid #f44336;
+        }
+        
+        .toggle-platform {
+            cursor: pointer;
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .toggle-platform:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .platform-collapsed .platform-content {
+            display: none;
+        }
+        
+        .expand-arrow {
+            float: right;
+            transition: transform 0.3s;
+        }
+        
+        .platform-collapsed .expand-arrow {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-modal" id="setup-modal">
+        <div class="setup-container">
+            <div class="setup-header">
+                <h2>🎮 Setup Streaming</h2>
+                <p>Configura le tue API per iniziare a streammare!</p>
+            </div>
+            
+            <!-- Twitch Setup -->
+            <div class="platform-setup twitch-setup">
+                <div class="toggle-platform" onclick="togglePlatform('twitch')">
+                    <div class="platform-header">
+                        <span class="platform-icon">💜</span>
+                        <h3>Twitch</h3>
+                        <span class="expand-arrow">▼</span>
+                    </div>
+                </div>
+                
+                <div class="platform-content" id="twitch-content">
+                    <div class="step-list">
+                        <div class="step-item">
+                            <span class="step-number">1</span>
+                            Vai su <a href="https://dev.twitch.tv/console" target="_blank" class="help-link">🔗 Twitch Developer Console</a>
+                        </div>
+                        <div class="step-item">
+                            <span class="step-number">2</span>
+                            Clicca "Register Your Application"
+                        </div>
+                        <div class="step-item">
+                            <span class="step-number">3</span>
+                            Nome: <code>Stardew Live Stream</code>
+                        </div>
+                        <div class="step-item">
+                            <span class="step-number">4</span>
+                            OAuth Redirect URL: <code id="twitch-redirect-url">https://tuodominio.com/auth/twitch</code>
+                        </div>
+                        <div class="step-item">
+                            <span class="step-number">5</span>
+                            Categoria: <code>Game Integration</code>
+                        </div>
+                    </div>
+                    
+                    <div class="api-input-group">
+                        <label>Client ID:</label>
+                        <input type="text" class="api-input" id="twitch-client-id" placeholder="Il tuo Twitch Client ID">
+                    </div>
+                    
+                    <div class="api-input-group">
+                        <label>Client Secret:</label>
+                        <input type="password" class="api-input" id="twitch-client-secret" placeholder="Il tuo Twitch Client Secret">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TikTok Setup -->
+            <div class="platform-setup tiktok-setup">
+                <div class="toggle-platform" onclick="togglePlatform('tiktok')">
+                    <div class="platform-header">
+                        <span class="platform-icon">🎵</span>
+                        <h3>TikTok</h3>
+                        <span class="expand-arrow">▼</span>
+                    </div>
+                </div>
+                
+                <div class="platform-content" id="tiktok-content">
+                    <div class="step-list">
+                        <div class="step-item">
+                            <span class="step-number">1</span>
+                            Vai su <a href="https://developers.tiktok.com/" target="_blank" class="help-link">🔗 TikTok for Developers</a>
+                        </div>
+                        <div class="step-item">
+                            <span class="step-number">2</span>
+                            Crea "New App"
+                        </div>
+                        <div class="step-item">
+                            <span class="step-number">3</span>
+                            Nome: <code>Stardew Live Stream</code>
+                        </div>
+                        <div class="step-item">
+                            <span class="step-number">4</span>
+                            Redirect URI: <code id="tiktok-redirect-url">https://tuodominio.com/auth/tiktok</code>
+                        </div>
+                        <div class="step-item">
+                            <span class="step-number">5</span>
+                            Scopes: <code>user.info.basic, live.room.info</code>
+                        </div>
+                    </div>
+                    
+                    <div class="api-input-group">
+                        <label>Client Key:</label>
+                        <input type="text" class="api-input" id="tiktok-client-key" placeholder="Il tuo TikTok Client Key">
+                    </div>
+                    
+                    <div class="api-input-group">
+                        <label>Client Secret:</label>
+                        <input type="password" class="api-input" id="tiktok-client-secret" placeholder="Il tuo TikTok Client Secret">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status Message -->
+            <div id="status-message" style="display: none;"></div>
+            
+            <!-- Buttons -->
+            <div class="setup-buttons">
+                <button class="setup-btn" onclick="saveConfiguration()">
+                    ✅ Salva Configurazione
+                </button>
+                <button class="setup-btn skip-btn" onclick="skipSetup()">
+                    ⏭️ Salta (Modalità Demo)
+                </button>
+            </div>
+            
+            <!-- Instructions -->
+            <div style="margin-top: 20px; font-size: 12px; text-align: center; opacity: 0.8;">
+                💡 Le tue chiavi API vengono salvate solo nel tuo browser (localStorage)<br>
+                🔒 Nessun dato viene inviato a server esterni
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        console.log('🎮 Setup Streaming Platform inizializzata');
+        
+        // Aggiorna URL di redirect basati sul dominio corrente
+        function updateRedirectUrls() {
+            const baseUrl = window.location.origin;
+            document.getElementById('twitch-redirect-url').textContent = `${baseUrl}/auth/twitch/callback`;
+            document.getElementById('tiktok-redirect-url').textContent = `${baseUrl}/auth/tiktok/callback`;
+        }
+        
+        // Toggle piattaforma
+        function togglePlatform(platform) {
+            const content = document.getElementById(`${platform}-content`);
+            const setup = content.closest('.platform-setup');
+            
+            setup.classList.toggle('platform-collapsed');
+        }
+        
+        // Salva configurazione
+        function saveConfiguration() {
+            const twitchClientId = document.getElementById('twitch-client-id').value;
+            const twitchClientSecret = document.getElementById('twitch-client-secret').value;
+            const tiktokClientKey = document.getElementById('tiktok-client-key').value;
+            const tiktokClientSecret = document.getElementById('tiktok-client-secret').value;
+            
+            // Validazione base
+            if (!twitchClientId && !tiktokClientKey) {
+                showStatus('❌ Inserisci almeno una configurazione (Twitch o TikTok)', 'error');
+                return;
+            }
+            
+            // Salva in localStorage
+            const config = {
+                twitch: twitchClientId && twitchClientSecret ? {
+                    client_id: twitchClientId,
+                    client_secret: twitchClientSecret
+                } : null,
+                tiktok: tiktokClientKey && tiktokClientSecret ? {
+                    client_key: tiktokClientKey,
+                    client_secret: tiktokClientSecret
+                } : null,
+                configured: true,
+                timestamp: Date.now()
+            };
+            
+            localStorage.setItem('streaming_config', JSON.stringify(config));
+            
+            showStatus('✅ Configurazione salvata con successo!', 'success');
+            
+            setTimeout(() => {
+                document.getElementById('setup-modal').style.display = 'none';
+                initializeStreamingPlatform();
+            }, 2000);
+        }
+        
+        // Salta setup (modalità demo)
+        function skipSetup() {
+            const config = {
+                demo_mode: true,
+                configured: true,
+                timestamp: Date.now()
+            };
+            
+            localStorage.setItem('streaming_config', JSON.stringify(config));
+            showStatus('🎮 Modalità demo attivata!', 'success');
+            
+            setTimeout(() => {
+                document.getElementById('setup-modal').style.display = 'none';
+                initializeStreamingPlatform();
+            }, 1500);
+        }
+        
+        // Mostra messaggio di stato
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.style.display = 'block';
+            
+            if (type === 'error') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Inizializza piattaforma streaming
+        function initializeStreamingPlatform() {
+            // Reindirizza alla pagina principale
+            window.location.href = '/live-platform.html';
+        }
+        
+        // Controlla se già configurato
+        function checkExistingConfig() {
+            const config = localStorage.getItem('streaming_config');
+            if (config) {
+                const parsed = JSON.parse(config);
+                if (parsed.configured) {
+                    // Già configurato, salta il setup
+                    document.getElementById('setup-modal').style.display = 'none';
+                    initializeStreamingPlatform();
+                    return;
+                }
+            }
+        }
+        
+        // Carica configurazione esistente nei campi
+        function loadExistingConfig() {
+            const config = localStorage.getItem('streaming_config');
+            if (config) {
+                const parsed = JSON.parse(config);
+                
+                if (parsed.twitch) {
+                    document.getElementById('twitch-client-id').value = parsed.twitch.client_id || '';
+                    document.getElementById('twitch-client-secret').value = parsed.twitch.client_secret || '';
+                }
+                
+                if (parsed.tiktok) {
+                    document.getElementById('tiktok-client-key').value = parsed.tiktok.client_key || '';
+                    document.getElementById('tiktok-client-secret').value = parsed.tiktok.client_secret || '';
+                }
+            }
+        }
+        
+        // Inizializzazione
+        updateRedirectUrls();
+        checkExistingConfig();
+        loadExistingConfig();
+        
+        console.log('🚀 Setup Platform pronta!');
+    </script>
+</body>
+</html>

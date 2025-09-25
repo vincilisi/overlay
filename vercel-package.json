@@ -1,14 +1,14 @@
 {
-  "name": "stardew-live-ultra",
-  "version": "3.0.0",
-  "scripts": {
-    "build": "echo 'Build completed'",
-    "dev": "vercel dev",
-    "deploy": "vercel --prod"
-  },
-  "dependencies": {
-    "@vercel/node": "^3.0.0",
-    "ws": "^8.14.2",
-    "node-rtmp-server": "^2.0.7"
-  }
+    "name": "stardew-live-ultra",
+    "version": "3.0.0",
+    "scripts": {
+        "build": "echo 'Build completed'",
+        "dev": "vercel dev",
+        "deploy": "vercel --prod"
+    },
+    "dependencies": {
+        "@vercel/node": "^3.0.0",
+        "ws": "^8.14.2",
+        "node-rtmp-server": "^2.0.7"
+    }
 }

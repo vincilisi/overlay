@@ -9,18 +9,25 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Configurazione OAuth (inserisci le tue chiavi reali)
-const TWITCH_CONFIG = {
-    CLIENT_ID: process.env.TWITCH_CLIENT_ID || 'your_twitch_client_id',
-    CLIENT_SECRET: process.env.TWITCH_CLIENT_SECRET || 'your_twitch_client_secret',
-    REDIRECT_URI: process.env.TWITCH_REDIRECT_URI || (process.env.RENDER_EXTERNAL_URL + '/auth/twitch/callback') || 'http://localhost:3001/auth/twitch/callback'
-};
+// Configurazione OAuth dinamica (gestita dal frontend)
+// Le chiavi API vengono passate dal client tramite richieste POST
+function getTwitchConfig(clientId, clientSecret) {
+    const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+    return {
+        CLIENT_ID: clientId,
+        CLIENT_SECRET: clientSecret,
+        REDIRECT_URI: `${baseUrl}/auth/twitch/callback`
+    };
+}
 
-const TIKTOK_CONFIG = {
-    CLIENT_KEY: process.env.TIKTOK_CLIENT_KEY || 'your_tiktok_client_key',
-    CLIENT_SECRET: process.env.TIKTOK_CLIENT_SECRET || 'your_tiktok_client_secret',
-    REDIRECT_URI: process.env.TIKTOK_REDIRECT_URI || (process.env.RENDER_EXTERNAL_URL + '/auth/tiktok/callback') || 'http://localhost:3001/auth/tiktok/callback'
-};
+function getTikTokConfig(clientKey, clientSecret) {
+    const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+    return {
+        CLIENT_KEY: clientKey,
+        CLIENT_SECRET: clientSecret,
+        REDIRECT_URI: `${baseUrl}/auth/tiktok/callback`
+    };
+}
 
 // Store temporaneo per i token (in produzione usa un database)
 const authStore = new Map();
@@ -29,26 +36,55 @@ console.log('🚀 Server di autenticazione streaming avviato');
 
 // === TWITCH AUTHENTICATION ===
 
-// Inizia autenticazione Twitch
-app.get('/auth/twitch', (req, res) => {
-    const scopes = 'channel:manage:broadcast user:read:email user:read:subscriptions';
-    const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(TWITCH_CONFIG.REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scopes)}`;
+// Inizia autenticazione Twitch con configurazione dinamica
+app.post('/auth/twitch/start', (req, res) => {
+    const { client_id, client_secret } = req.body;
     
-    console.log('🔗 Reindirizzamento a Twitch Auth:', authUrl);
-    res.redirect(authUrl);
+    if (!client_id || !client_secret) {
+        return res.status(400).json({ error: 'Client ID e Client Secret richiesti' });
+    }
+    
+    const config = getTwitchConfig(client_id, client_secret);
+    const scopes = 'channel:manage:broadcast user:read:email user:read:subscriptions';
+    const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${config.CLIENT_ID}&redirect_uri=${encodeURIComponent(config.REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scopes)}`;
+    
+    // Salva temporaneamente la configurazione (in produzione usa database)
+    authStore.set(`twitch_config_${client_id}`, config);
+    
+    console.log('🔗 URL Twitch Auth generato per client:', client_id);
+    res.json({ auth_url: authUrl });
 });
 
-// Callback Twitch
+// Fallback per link diretto (compatibilità)
+app.get('/auth/twitch', (req, res) => {
+    res.send(`
+        <html>
+            <head><title>Configurazione Richiesta</title></head>
+            <body style="font-family: Arial; text-align: center; padding: 50px;">
+                <h2>🔧 Configurazione API Richiesta</h2>
+                <p>Per usare l'autenticazione Twitch, devi prima configurare le tue API.</p>
+                <a href="/setup-streaming.html" style="display: inline-block; background: #9146ff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px;">
+                    ⚙️ Configura Ora
+                </a>
+                <script>
+                    setTimeout(() => {
+                        window.location.href = '/setup-streaming.html';
+                    }, 3000);
+                </script>
+            </body>
+        </html>
+    `);
+});// Callback Twitch
 app.get('/auth/twitch/callback', async (req, res) => {
     const { code } = req.query;
-    
+
     if (!code) {
         return res.status(400).send('❌ Codice di autorizzazione mancante');
     }
-    
+
     try {
         console.log('🔄 Scambio codice Twitch per token...');
-        
+
         // Scambia il codice per un access token
         const tokenResponse = await axios.post('https://id.twitch.tv/oauth2/token', {
             client_id: TWITCH_CONFIG.CLIENT_ID,
@@ -57,9 +93,9 @@ app.get('/auth/twitch/callback', async (req, res) => {
             grant_type: 'authorization_code',
             redirect_uri: TWITCH_CONFIG.REDIRECT_URI
         });
-        
+
         const { access_token, refresh_token } = tokenResponse.data;
-        
+
         // Ottieni informazioni utente
         const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
             headers: {
@@ -67,9 +103,9 @@ app.get('/auth/twitch/callback', async (req, res) => {
                 'Client-Id': TWITCH_CONFIG.CLIENT_ID
             }
         });
-        
+
         const userData = userResponse.data.data[0];
-        
+
         // Salva nel store
         const sessionId = generateSessionId();
         authStore.set(sessionId, {
@@ -79,9 +115,9 @@ app.get('/auth/twitch/callback', async (req, res) => {
             user: userData,
             created_at: Date.now()
         });
-        
+
         console.log('✅ Autenticazione Twitch completata per:', userData.display_name);
-        
+
         // Chiudi popup e comunica successo
         res.send(`
             <html>
@@ -103,7 +139,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
                 </body>
             </html>
         `);
-        
+
     } catch (error) {
         console.error('❌ Errore autenticazione Twitch:', error.response?.data || error.message);
         res.status(500).send('❌ Errore durante l\'autenticazione Twitch');
@@ -116,7 +152,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
 app.get('/auth/tiktok', (req, res) => {
     const scopes = 'user.info.basic,video.list,live.room.info';
     const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${TIKTOK_CONFIG.CLIENT_KEY}&redirect_uri=${encodeURIComponent(TIKTOK_CONFIG.REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scopes)}`;
-    
+
     console.log('🔗 Reindirizzamento a TikTok Auth:', authUrl);
     res.redirect(authUrl);
 });
@@ -124,14 +160,14 @@ app.get('/auth/tiktok', (req, res) => {
 // Callback TikTok
 app.get('/auth/tiktok/callback', async (req, res) => {
     const { code } = req.query;
-    
+
     if (!code) {
         return res.status(400).send('❌ Codice di autorizzazione mancante');
     }
-    
+
     try {
         console.log('🔄 Scambio codice TikTok per token...');
-        
+
         // Scambia il codice per un access token
         const tokenResponse = await axios.post('https://open.tiktokapis.com/v2/oauth/token/', {
             client_key: TIKTOK_CONFIG.CLIENT_KEY,
@@ -144,16 +180,16 @@ app.get('/auth/tiktok/callback', async (req, res) => {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
         });
-        
+
         const { access_token, refresh_token, open_id } = tokenResponse.data;
-        
+
         // Ottieni informazioni utente
         const userResponse = await axios.post('https://open.tiktokapis.com/v2/user/info/', {
             access_token: access_token
         });
-        
+
         const userData = userResponse.data.data.user;
-        
+
         // Salva nel store
         const sessionId = generateSessionId();
         authStore.set(sessionId, {
@@ -164,9 +200,9 @@ app.get('/auth/tiktok/callback', async (req, res) => {
             user: userData,
             created_at: Date.now()
         });
-        
+
         console.log('✅ Autenticazione TikTok completata per:', userData.display_name);
-        
+
         // Chiudi popup e comunica successo
         res.send(`
             <html>
@@ -188,7 +224,7 @@ app.get('/auth/tiktok/callback', async (req, res) => {
                 </body>
             </html>
         `);
-        
+
     } catch (error) {
         console.error('❌ Errore autenticazione TikTok:', error.response?.data || error.message);
         res.status(500).send('❌ Errore durante l\'autenticazione TikTok');
@@ -201,17 +237,17 @@ app.get('/auth/tiktok/callback', async (req, res) => {
 app.get('/api/auth/status/:sessionId', (req, res) => {
     const { sessionId } = req.params;
     const auth = authStore.get(sessionId);
-    
+
     if (!auth) {
         return res.status(404).json({ error: 'Sessione non trovata' });
     }
-    
+
     // Controlla se la sessione è scaduta (24 ore)
     if (Date.now() - auth.created_at > 24 * 60 * 60 * 1000) {
         authStore.delete(sessionId);
         return res.status(401).json({ error: 'Sessione scaduta' });
     }
-    
+
     res.json({
         platform: auth.platform,
         user: auth.user,
@@ -223,14 +259,14 @@ app.get('/api/auth/status/:sessionId', (req, res) => {
 app.post('/api/stream/twitch/start', async (req, res) => {
     const { sessionId, title, category } = req.body;
     const auth = authStore.get(sessionId);
-    
+
     if (!auth || auth.platform !== 'twitch') {
         return res.status(401).json({ error: 'Autenticazione Twitch non valida' });
     }
-    
+
     try {
         console.log('🔴 Avvio stream Twitch per:', auth.user.display_name);
-        
+
         // Modifica informazioni stream
         await axios.patch(`https://api.twitch.tv/helix/channels?broadcaster_id=${auth.user.id}`, {
             title: title || '🌱 Stardew Valley Live!',
@@ -242,17 +278,17 @@ app.post('/api/stream/twitch/start', async (req, res) => {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         // In produzione qui configureresti RTMP per inviare lo stream
         console.log('✅ Stream Twitch configurato');
-        
+
         res.json({
             success: true,
             message: 'Stream Twitch avviato',
             rtmp_url: `rtmp://live.twitch.tv/live/${auth.user.name}`, // URL RTMP di esempio
             stream_key: 'your_stream_key_here' // Chiave stream (da ottenere dalle API)
         });
-        
+
     } catch (error) {
         console.error('❌ Errore avvio stream Twitch:', error.response?.data || error.message);
         res.status(500).json({ error: 'Errore avvio stream Twitch' });
@@ -263,22 +299,22 @@ app.post('/api/stream/twitch/start', async (req, res) => {
 app.post('/api/stream/tiktok/start', async (req, res) => {
     const { sessionId, title } = req.body;
     const auth = authStore.get(sessionId);
-    
+
     if (!auth || auth.platform !== 'tiktok') {
         return res.status(401).json({ error: 'Autenticazione TikTok non valida' });
     }
-    
+
     try {
         console.log('🔴 Avvio stream TikTok per:', auth.user.display_name);
-        
+
         // Crea live room TikTok
         const liveResponse = await axios.post('https://open.tiktokapis.com/v2/live/room/create/', {
             access_token: auth.access_token,
             title: title || '🌱 Stardew Valley Live!'
         });
-        
+
         console.log('✅ Live room TikTok creata');
-        
+
         res.json({
             success: true,
             message: 'Stream TikTok avviato',
@@ -286,7 +322,7 @@ app.post('/api/stream/tiktok/start', async (req, res) => {
             rtmp_url: liveResponse.data.rtmp_url,
             stream_key: liveResponse.data.stream_key
         });
-        
+
     } catch (error) {
         console.error('❌ Errore avvio stream TikTok:', error.response?.data || error.message);
         res.status(500).json({ error: 'Errore avvio stream TikTok' });
@@ -297,14 +333,14 @@ app.post('/api/stream/tiktok/start', async (req, res) => {
 app.get('/api/stream/stats/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
     const auth = authStore.get(sessionId);
-    
+
     if (!auth) {
         return res.status(401).json({ error: 'Sessione non valida' });
     }
-    
+
     try {
         let stats = { viewers: 0, followers: 0, duration: 0 };
-        
+
         if (auth.platform === 'twitch') {
             // Ottieni statistiche Twitch
             const streamResponse = await axios.get(`https://api.twitch.tv/helix/streams?user_id=${auth.user.id}`, {
@@ -313,16 +349,16 @@ app.get('/api/stream/stats/:sessionId', async (req, res) => {
                     'Client-Id': TWITCH_CONFIG.CLIENT_ID
                 }
             });
-            
+
             if (streamResponse.data.data.length > 0) {
                 const stream = streamResponse.data.data[0];
                 stats.viewers = stream.viewer_count;
                 stats.duration = Math.floor((Date.now() - new Date(stream.started_at).getTime()) / 1000);
             }
         }
-        
+
         res.json(stats);
-        
+
     } catch (error) {
         console.error('❌ Errore ottenimento statistiche:', error.message);
         res.json({ viewers: Math.floor(Math.random() * 50) + 10, followers: 0, duration: 0 });
@@ -348,8 +384,8 @@ setInterval(() => {
 
 // Health check per Render.com
 app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
+    res.json({
+        status: 'ok',
         timestamp: new Date().toISOString(),
         service: 'Stardew Valley Live Stream Platform',
         version: '2.0.0'
