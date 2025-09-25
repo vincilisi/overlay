@@ -135,13 +135,28 @@
     <script src="main.js"></script>
     <script src="configurator.js"></script>
     <script>
-        console.log('🔄 Overlay inizializzato - Modalità LocalStorage');
+        console.log('🔄 Overlay inizializzato - Modalità URL Parameters + LocalStorage');
         
-        // Funzione per caricare i dati salvati
-        function loadOverlayData() {
-            const data = JSON.parse(localStorage.getItem('stardew-overlay-data') || '{}');
+        // Funzione per ottenere parametri URL
+        function getURLParams() {
+            const params = new URLSearchParams(window.location.search);
+            const data = {};
             
-            // Aggiorna elementi se presenti
+            // Converte tutti i parametri in oggetto
+            for (let [key, value] of params) {
+                data[key] = value;
+            }
+            
+            return Object.keys(data).length > 0 ? data : null;
+        }
+        
+        // Funzione per caricare i dati salvati (LocalStorage fallback)
+        function loadDataFromStorage() {
+            return JSON.parse(localStorage.getItem('stardew-overlay-data') || '{}');
+        }
+        
+        // Funzione per aggiornare l'overlay
+        function updateOverlay(data) {
             if (data.seeds) document.getElementById('seeds').textContent = data.seeds;
             if (data.coins) document.getElementById('coins').textContent = data.coins;
             if (data.farmingLevel) document.getElementById('farming-level').textContent = data.farmingLevel;
@@ -153,8 +168,6 @@
             if (data.ingredient1) document.getElementById('ingredient1').textContent = data.ingredient1;
             if (data.ingredient2) document.getElementById('ingredient2').textContent = data.ingredient2;
             if (data.ingredient3) document.getElementById('ingredient3').textContent = data.ingredient3;
-            
-            console.log('✅ Dati caricati dal localStorage:', data);
         }
         
         // Funzione per mostrare notifiche
@@ -170,26 +183,49 @@
             }, 3000);
         }
         
-        // Controlla i dati ogni secondo
-        let lastUpdate = localStorage.getItem('stardew-overlay-timestamp') || '0';
-        
-        setInterval(() => {
-            const currentTimestamp = localStorage.getItem('stardew-overlay-timestamp') || '0';
-            if (currentTimestamp !== lastUpdate) {
-                loadOverlayData();
-                lastUpdate = currentTimestamp;
+        // Funzione principale per caricare e aggiornare i dati
+        function loadOverlayData() {
+            // Prova prima i parametri URL (per Streamlabs)
+            let data = getURLParams();
+            
+            // Se non disponibili, usa localStorage (per browser normale)
+            if (!data) {
+                data = loadDataFromStorage();
             }
             
-            // Controlla se c'è una notifica da mostrare
-            const notification = localStorage.getItem('stardew-overlay-notification');
-            if (notification) {
-                showNotification(notification);
+            // Aggiorna l'overlay
+            updateOverlay(data);
+            
+            console.log('✅ Dati caricati:', data);
+            console.log('🔍 Modalità:', data && Object.keys(data).length > 0 ? 'URL Parameters (Streamlabs)' : 'LocalStorage (Browser)');
+        }
+        
+        // Controlla le notifiche separatamente (sempre da localStorage)
+        function checkNotifications() {
+            const notificationData = localStorage.getItem('stardew-overlay-notification');
+            if (notificationData) {
+                const notification = JSON.parse(notificationData);
+                showNotification(notification.message);
                 localStorage.removeItem('stardew-overlay-notification');
             }
-        }, 1000);
+        }
+        
+        // Per browser normale: controlla aggiornamenti ogni 2 secondi
+        if (!getURLParams()) {
+            setInterval(() => {
+                loadOverlayData();
+                checkNotifications();
+            }, 2000);
+        }
+        
+        // Per Streamlabs: controlla solo notifiche
+        if (getURLParams()) {
+            setInterval(checkNotifications, 2000);
+        }
         
         // Carica i dati all'avvio
         loadOverlayData();
+        checkNotifications();
     </script>
 </body>
 </html>

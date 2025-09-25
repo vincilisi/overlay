@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎛️ Controllo Overlay - Stardew Valley (Streamlabs Compatible)</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #8BC34A, #4CAF50);
+            margin: 0;
+            padding: 20px;
+            color: white;
+        }
+        
+        .control-panel {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #FFF;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .section h2 {
+            color: #FFEB3B;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .button.success {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+        }
+        
+        .quick-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .status-message {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .status-success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+        
+        .status-error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+        
+        .url-info {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #FFEB3B;
+        }
+        
+        .url-info h3 {
+            color: #FFEB3B;
+            margin-top: 0;
+        }
+        
+        .url-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="control-panel">
+        <h1>🎛️ Controllo Overlay</h1>
+        
+        <div class="url-info">
+            <h3>📺 URL per Streamlabs/OBS:</h3>
+            <div class="url-box" id="streamlabs-url">
+                Generando URL personalizzato...
+            </div>
+            <p><strong>⚠️ Usa questo URL nel Browser Source di Streamlabs!</strong></p>
+        </div>
+        
+        <div class="status-message" id="status-message"></div>
+        
+        <!-- Sezione Statistiche Giocatore -->
+        <div class="section">
+            <h2>📊 Statistiche Giocatore</h2>
+            
+            <div class="form-group">
+                <label>🌱 Semi Piantati:</label>
+                <input type="number" id="seeds" value="42" placeholder="Numero di semi">
+            </div>
+            
+            <div class="form-group">
+                <label>💰 Monete:</label>
+                <input type="text" id="coins" value="999,999g" placeholder="es: 50,000g">
+            </div>
+            
+            <div class="form-group">
+                <label>⭐ Livello Farming:</label>
+                <input type="number" id="farming-level" value="10" min="1" max="10">
+            </div>
+            
+            <button class="button success" onclick="aggiornaStatistiche()">
+                📊 Aggiorna Statistiche
+            </button>
+        </div>
+        
+        <!-- Sezione Tempo e Stagione -->
+        <div class="section">
+            <h2>🌡️ Tempo e Stagione</h2>
+            
+            <div class="form-group">
+                <label>🌤️ Icona Tempo:</label>
+                <select id="weather-icon">
+                    <option value="☀️">☀️ Sole</option>
+                    <option value="🌧️">🌧️ Pioggia</option>
+                    <option value="⛈️">⛈️ Temporale</option>
+                    <option value="🌨️">🌨️ Neve</option>
+                    <option value="☁️">☁️ Nuvoloso</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>📅 Stagione e Giorno:</label>
+                <input type="text" id="weather-text" value="Primavera - Giorno 15" placeholder="es: Estate - Giorno 3">
+            </div>
+            
+            <div class="form-group">
+                <label>🌡️ Temperatura:</label>
+                <input type="text" id="weather-temp" value="22°C" placeholder="es: 18°C">
+            </div>
+            
+            <button class="button success" onclick="aggiornaTempo()">
+                🌤️ Aggiorna Tempo
+            </button>
+        </div>
+        
+        <!-- Sezione Ricetta del Giorno -->
+        <div class="section">
+            <h2>👩‍🍳 Ricetta del Giorno</h2>
+            
+            <div class="form-group">
+                <label>🍽️ Icona Ricetta:</label>
+                <select id="recipe-icon">
+                    <option value="🥗">🥗 Insalata</option>
+                    <option value="🍲">🍲 Stufato</option>
+                    <option value="🍝">🍝 Pasta</option>
+                    <option value="🍛">🍛 Curry</option>
+                    <option value="🥘">🥘 Paella</option>
+                    <option value="🍕">🍕 Pizza</option>
+                    <option value="🥙">🥙 Kebab</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>📝 Nome Ricetta:</label>
+                <input type="text" id="recipe-name" value="Insalata di Stagione" placeholder="es: Zuppa di Rape">
+            </div>
+            
+            <div class="form-group">
+                <label>🥬 Ingrediente 1:</label>
+                <input type="text" id="ingredient1" value="🥬 Lattuga" placeholder="es: 🍅 Pomodoro">
+            </div>
+            
+            <div class="form-group">
+                <label>🍅 Ingrediente 2:</label>
+                <input type="text" id="ingredient2" value="🍅 Pomodoro" placeholder="es: 🧄 Aglio">
+            </div>
+            
+            <div class="form-group">
+                <label>🥒 Ingrediente 3:</label>
+                <input type="text" id="ingredient3" value="🥒 Cetriolo" placeholder="es: 🌶️ Peperoncino">
+            </div>
+            
+            <button class="button success" onclick="aggiornaRicetta()">
+                👩‍🍳 Aggiorna Ricetta
+            </button>
+        </div>
+        
+        <!-- Sezione Notifiche -->
+        <div class="section">
+            <h2>🔔 Notifiche</h2>
+            
+            <div class="form-group">
+                <label>📢 Messaggio Personalizzato:</label>
+                <input type="text" id="custom-message" placeholder="es: Grazie per il follow!">
+            </div>
+            
+            <div class="quick-buttons">
+                <button class="button" onclick="mostraNotifica('🎉 Nuovo Follower! 🌟')">Nuovo Follower</button>
+                <button class="button" onclick="mostraNotifica('💝 Nuova Donazione! 💝')">Donazione</button>
+                <button class="button" onclick="mostraNotifica('⭐ Nuovo Subscriber! ⭐')">Subscriber</button>
+                <button class="button" onclick="mostraNotificaCustom()">Messaggio Custom</button>
+            </div>
+        </div>
+        
+        <!-- Sezione Test -->
+        <div class="section">
+            <h2>🔧 Test Sistema</h2>
+            
+            <div class="quick-buttons">
+                <button class="button" onclick="testSistema()">🧪 Test Completo</button>
+                <button class="button" onclick="copiaURL()">📋 Copia URL Streamlabs</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🎛️ Pannello di controllo inizializzato - Modalità URL Parameters');
+        
+        // Genera URL personalizzato per Streamlabs
+        function generaURLStreamlabs() {
+            const baseURL = window.location.origin + '/index.html';
+            const data = raccogliDati();
+            const params = new URLSearchParams(data);
+            return baseURL + '?' + params.toString();
+        }
+        
+        // Aggiorna l'URL mostrato
+        function aggiornaURLMostrato() {
+            const url = generaURLStreamlabs();
+            document.getElementById('streamlabs-url').textContent = url;
+        }
+        
+        // Funzione per mostrare messaggi di stato
+        function showMessage(message, type = 'success') {
+            const statusElement = document.getElementById('status-message');
+            statusElement.textContent = message;
+            statusElement.className = `status-message status-${type}`;
+            statusElement.style.display = 'block';
+            
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Raccoglie tutti i dati dai form
+        function raccogliDati() {
+            return {
+                seeds: document.getElementById('seeds').value,
+                coins: document.getElementById('coins').value,
+                farmingLevel: document.getElementById('farming-level').value,
+                weatherIcon: document.getElementById('weather-icon').value,
+                weatherText: document.getElementById('weather-text').value,
+                weatherTemp: document.getElementById('weather-temp').value,
+                recipeIcon: document.getElementById('recipe-icon').value,
+                recipeName: document.getElementById('recipe-name').value,
+                ingredient1: document.getElementById('ingredient1').value,
+                ingredient2: document.getElementById('ingredient2').value,
+                ingredient3: document.getElementById('ingredient3').value,
+                timestamp: Date.now()
+            };
+        }
+        
+        // Salva dati (localStorage + aggiorna URL)
+        function salvaData() {
+            const data = raccogliDati();
+            localStorage.setItem('stardew-overlay-data', JSON.stringify(data));
+            aggiornaURLMostrato();
+            console.log('💾 Dati salvati:', data);
+        }
+        
+        // Aggiorna statistiche
+        function aggiornaStatistiche() {
+            salvaData();
+            showMessage('📊 Statistiche aggiornate! Copia il nuovo URL per Streamlabs.');
+        }
+        
+        // Aggiorna tempo
+        function aggiornaTempo() {
+            salvaData();
+            showMessage('🌤️ Tempo aggiornato! Copia il nuovo URL per Streamlabs.');
+        }
+        
+        // Aggiorna ricetta
+        function aggiornaRicetta() {
+            salvaData();
+            showMessage('👩‍🍳 Ricetta aggiornata! Copia il nuovo URL per Streamlabs.');
+        }
+        
+        // Mostra notifica
+        function mostraNotifica(message) {
+            // Per le notifiche, usiamo un sistema temporaneo diverso
+            const notificationData = {
+                message: message,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('stardew-overlay-notification', JSON.stringify(notificationData));
+            showMessage('🔔 Notifica preparata: ' + message);
+        }
+        
+        // Mostra notifica custom
+        function mostraNotificaCustom() {
+            const message = document.getElementById('custom-message').value;
+            if (message.trim()) {
+                mostraNotifica(message);
+                document.getElementById('custom-message').value = '';
+            } else {
+                showMessage('⚠️ Inserisci un messaggio!', 'error');
+            }
+        }
+        
+        // Test completo del sistema
+        function testSistema() {
+            salvaData();
+            mostraNotifica('🧪 Test del sistema completato!');
+            showMessage('✅ Test completo eseguito! Copia il nuovo URL per Streamlabs.');
+        }
+        
+        // Copia URL per Streamlabs
+        function copiaURL() {
+            const url = generaURLStreamlabs();
+            navigator.clipboard.writeText(url).then(() => {
+                showMessage('📋 URL copiato! Incollalo nel Browser Source di Streamlabs.');
+            });
+        }
+        
+        // Carica dati salvati nei form all'avvio
+        function caricaDatiForm() {
+            const data = JSON.parse(localStorage.getItem('stardew-overlay-data') || '{}');
+            
+            if (data.seeds) document.getElementById('seeds').value = data.seeds;
+            if (data.coins) document.getElementById('coins').value = data.coins;
+            if (data.farmingLevel) document.getElementById('farming-level').value = data.farmingLevel;
+            if (data.weatherIcon) document.getElementById('weather-icon').value = data.weatherIcon;
+            if (data.weatherText) document.getElementById('weather-text').value = data.weatherText;
+            if (data.weatherTemp) document.getElementById('weather-temp').value = data.weatherTemp;
+            if (data.recipeIcon) document.getElementById('recipe-icon').value = data.recipeIcon;
+            if (data.recipeName) document.getElementById('recipe-name').value = data.recipeName;
+            if (data.ingredient1) document.getElementById('ingredient1').value = data.ingredient1;
+            if (data.ingredient2) document.getElementById('ingredient2').value = data.ingredient2;
+            if (data.ingredient3) document.getElementById('ingredient3').value = data.ingredient3;
+        }
+        
+        // Inizializzazione
+        caricaDatiForm();
+        aggiornaURLMostrato();
+        showMessage('🚀 Pannello di controllo pronto! Usa l\'URL sopra per Streamlabs.');
+    </script>
+</body>
+</html>

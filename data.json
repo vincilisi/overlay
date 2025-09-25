@@ -1,0 +1,15 @@
+{
+    "seeds": "42",
+    "coins": "999,999g",
+    "farmingLevel": "10",
+    "weatherIcon": "☀️",
+    "weatherText": "Primavera - Giorno 15",
+    "weatherTemp": "22°C",
+    "recipeIcon": "🥗",
+    "recipeName": "Insalata di Stagione",
+    "ingredient1": "🥬 Lattuga",
+    "ingredient2": "🍅 Pomodoro",
+    "ingredient3": "🥒 Cetriolo",
+    "lastUpdate": 0,
+    "notification": ""
+}
