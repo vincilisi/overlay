@@ -243,12 +243,14 @@
         </div>
     </div>
 
-    <!-- Import WebRTC Controller -->
+    <!-- Import WebRTC Controller e RTMP Bridge -->
     <script src="webrtc-stream.js"></script>
+    <script src="rtmp-bridge.js"></script>
     
     <script>
-        // WebRTC Direct Streaming con Controller Avanzato
+        // WebRTC Direct Streaming con RTMP Bridge Completo
         let streamController = null;
+        let rtmpBridge = null;
         let isStreaming = false;
         let streamStartTime = null;
         let statsInterval = null;
@@ -382,6 +384,42 @@
                 const streamData = await streamSetupResponse.json();
                 console.log('✅ Stream key ricevuta:', streamData.stream_key.substring(0, 10) + '...');
                 
+                // Setup RTMP Bridge per Twitch
+                if (!rtmpBridge) {
+                    rtmpBridge = new RTMPStreamBridge({
+                        rtmpUrl: streamData.rtmp_url,
+                        quality: document.getElementById('video-quality').value + 'p',
+                        fps: parseInt(document.getElementById('fps-setting').value),
+                        bitrate: parseInt(document.getElementById('bitrate-slider').value) * 1000
+                    });
+                    
+                    // Event handlers RTMP
+                    rtmpBridge.on('connected', (data) => {
+                        console.log('✅ RTMP Bridge connesso a Twitch');
+                        updateStatus('🌉 Bridge RTMP attivo - Connesso a Twitch!', 'success');
+                    });
+                    
+                    rtmpBridge.on('chunkProcessed', (data) => {
+                        console.log(`📡 Chunk processato: ${data.chunkSize} bytes`);
+                    });
+                    
+                    rtmpBridge.on('error', (data) => {
+                        console.error('❌ Errore RTMP Bridge:', data.error);
+                        updateStatus(`❌ Errore RTMP: ${data.error}`, 'error');
+                    });
+                }
+                
+                // Connetti RTMP Bridge a Twitch
+                await rtmpBridge.connectToTwitch(streamData.stream_key);
+                
+                // Modifica WebRTC per inviare chunk al bridge
+                streamController.on('dataChunk', async (data) => {
+                    if (rtmpBridge && rtmpBridge.isConnected) {
+                        await rtmpBridge.processWebRTCChunk(data.chunk);
+                    }
+                    updateStreamStats();
+                });
+                
                 // Avvia registrazione WebRTC
                 await streamController.startRecording('webm');
                 
@@ -415,15 +453,21 @@
         async function stopDirectStream() {
             updateStatus('🔄 Fermando stream...', 'info');
             
+            // Stop WebRTC
             if (streamController) {
                 streamController.stopRecording();
+            }
+            
+            // Disconnetti RTMP Bridge
+            if (rtmpBridge) {
+                await rtmpBridge.disconnect();
             }
             
             // Notifica server
             if (twitchAuth) {
                 try {
                     await fetch('/api/direct-stream/stop', {
-                        method: 'POST',
+                        method: 'POST', 
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             user_id: twitchAuth.user.id
@@ -468,15 +512,24 @@
             }, 1000);
         }
         
-        function updateStreamStats(stats) {
+        function updateStreamStats() {
             if (!document.getElementById('live-stats').classList.contains('hidden')) {
-                document.getElementById('stream-duration').textContent = stats.runtimeFormatted;
-                document.getElementById('frames-sent').textContent = stats.framesRecorded;
-                document.getElementById('data-sent').textContent = `${stats.mbTransferred} MB`;
+                const webrtcStats = streamController ? streamController.getStats() : {};
+                const rtmpStats = rtmpBridge ? rtmpBridge.getStats() : {};
                 
-                // Aggiorna anche il bitrate display
-                const bitrateKbps = Math.round(stats.avgBitrateMbps * 1000);
-                document.getElementById('bitrate').textContent = `${bitrateKbps} kbps`;
+                // Stats WebRTC
+                document.getElementById('stream-duration').textContent = webrtcStats.runtimeFormatted || '00:00';
+                document.getElementById('frames-sent').textContent = webrtcStats.framesRecorded || 0;
+                document.getElementById('data-sent').textContent = `${webrtcStats.mbTransferred || 0} MB`;
+                
+                // Stats RTMP Bridge
+                if (rtmpStats.isConnected) {
+                    document.getElementById('bitrate').textContent = `${rtmpStats.avgThroughputKBps} KB/s`;
+                    document.getElementById('viewers-count').textContent = `RTMP: ${rtmpStats.successRate}%`;
+                } else {
+                    const bitrateKbps = Math.round((webrtcStats.avgBitrateMbps || 0) * 1000);
+                    document.getElementById('bitrate').textContent = `${bitrateKbps} kbps`;
+                }
             }
         }
         
