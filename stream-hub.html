@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Stardew Valley Stream Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Stili aggiuntivi per streaming */
+        .stream-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            z-index: 10000;
+            min-width: 250px;
+        }
+        
+        .stream-controls h3 {
+            margin: 0 0 10px 0;
+            color: #FFEB3B;
+        }
+        
+        .stream-button {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 12px;
+        }
+        
+        .stream-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .stream-button.active {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+        }
+        
+        .stream-status {
+            font-size: 12px;
+            margin: 5px 0;
+        }
+        
+        .webcam-container {
+            position: absolute;
+            top: 60px;
+            right: 60px;
+            width: 300px;
+            height: 200px;
+            border: 3px solid #FFEB3B;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        .webcam-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .game-area {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            width: 800px;
+            height: 600px;
+            border: 2px dashed rgba(255, 235, 59, 0.5);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 235, 59, 0.7);
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .chat-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 300px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 10px;
+            color: white;
+            font-size: 12px;
+            overflow-y: auto;
+        }
+        
+        .toggle-controls {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10001;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toggle per nascondere/mostrare controlli -->
+    <button class="toggle-controls" onclick="toggleControls()">⚙️</button>
+    
+    <!-- Pannello controlli streaming -->
+    <div class="stream-controls" id="stream-controls">
+        <h3>🎮 Stream Hub</h3>
+        
+        <div class="stream-status" id="stream-status">
+            📡 Stream: Offline
+        </div>
+        
+        <div>
+            <button class="stream-button" onclick="startWebcam()">📹 Webcam</button>
+            <button class="stream-button" onclick="startScreenShare()">🖥️ Screen Share</button>
+            <button class="stream-button" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+        </div>
+        
+        <div>
+            <button class="stream-button" onclick="openController()">🎛️ Controller</button>
+            <button class="stream-button" onclick="openTwitch()">💜 Twitch</button>
+            <button class="stream-button" onclick="openTikTok()">🎵 TikTok</button>
+        </div>
+        
+        <div>
+            <label style="font-size: 10px;">
+                <input type="checkbox" id="show-game-area" checked onchange="toggleGameArea()">
+                Mostra area gioco
+            </label>
+        </div>
+        
+        <div>
+            <label style="font-size: 10px;">
+                <input type="checkbox" id="show-chat" onchange="toggleChat()">
+                Chat overlay
+            </label>
+        </div>
+    </div>
+    
+    <!-- Area per il gioco (condivisione schermo) -->
+    <div class="game-area" id="game-area">
+        🎮 Area Gioco - Attiva Screen Share per mostrare Stardew Valley
+    </div>
+    
+    <!-- Container webcam -->
+    <div class="webcam-container" id="webcam-container" style="display: none;">
+        <video class="webcam-video" id="webcam-video" autoplay muted></video>
+    </div>
+    
+    <!-- Chat panel -->
+    <div class="chat-panel" id="chat-panel" style="display: none;">
+        <div style="font-weight: bold; margin-bottom: 10px;">💬 Chat Stream</div>
+        <div id="chat-messages">
+            <div style="color: #8BC34A;">🌱 Benvenuti nel stream di Stardew Valley!</div>
+            <div style="color: #FF6B6B;">🎮 Usa il controller per cambiare overlay in tempo reale!</div>
+        </div>
+    </div>
+    
+    <!-- Overlay principale (stesso di prima) -->
+    <div class="overlay-container">
+        <!-- Cornice principale -->
+        <div class="main-frame">
+            <!-- Angoli decorativi -->
+            <div class="corner top-left">🌱</div>
+            <div class="corner top-right">🍄</div>
+            <div class="corner bottom-left">🥕</div>
+            <div class="corner bottom-right">🌻</div>
+            
+            <!-- Bordi decorativi -->
+            <div class="border-decoration top">
+                <span class="plant-icon">🌿</span>
+                <span class="plant-icon">🍅</span>
+                <span class="plant-icon">🌽</span>
+                <span class="plant-icon">🥬</span>
+                <span class="plant-icon">🌶️</span>
+            </div>
+            
+            <div class="border-decoration bottom">
+                <span class="plant-icon">🥔</span>
+                <span class="plant-icon">🍆</span>
+                <span class="plant-icon">🥒</span>
+                <span class="plant-icon">🌰</span>
+                <span class="plant-icon">🍓</span>
+            </div>
+            
+            <div class="border-decoration left">
+                <span class="plant-icon vertical">🌸</span>
+                <span class="plant-icon vertical">🌺</span>
+                <span class="plant-icon vertical">🌼</span>
+            </div>
+            
+            <div class="border-decoration right">
+                <span class="plant-icon vertical">🏵️</span>
+                <span class="plant-icon vertical">🌷</span>
+                <span class="plant-icon vertical">🌹</span>
+            </div>
+        </div>
+        
+        <!-- Pannello informazioni -->
+        <div class="info-panel">
+            <div class="info-title">📱 Info Giardino 📱</div>
+            <div class="info-content">
+                <div class="stat-item">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-text">Livello Farming</span>
+                    <span class="stat-value" id="farming-level">10</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-text">Monete</span>
+                    <span class="stat-value" id="coins">999,999g</span>
+                </div>
+                <div class="stat-item seeds-item" id="seeds-item">
+                    <span class="stat-icon">🌱</span>
+                    <span class="stat-text">Semi Piantati</span>
+                    <span class="stat-value" id="seeds">42</span>
+                    <span class="expand-arrow">▼</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sezione ricette -->
+        <div class="recipe-panel">
+            <div class="recipe-title" id="recipe-title">👩‍🍳 Ricetta del Giorno 👩‍🍳</div>
+            <div class="recipe-content">
+                <div class="recipe-item">
+                    <span class="recipe-icon" id="recipe-icon">🥗</span>
+                    <span class="recipe-name" id="recipe-name">Insalata di Stagione</span>
+                </div>
+                <div class="recipe-ingredients" id="recipe-ingredients">
+                    <span class="ingredient" id="ingredient1">🥬 Lattuga</span>
+                    <span class="ingredient" id="ingredient2">🍅 Pomodoro</span>
+                    <span class="ingredient" id="ingredient3">🥒 Cetriolo</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifiche animate -->
+        <div class="notification-area">
+            <div class="notification hidden" id="follow-notification">
+                <span class="notif-icon">🎉</span>
+                <span class="notif-text" id="notification-text">Nuovo Follower!</span>
+                <span class="notif-icon">🌟</span>
+            </div>
+        </div>
+        
+        <!-- Decorazioni fluttuanti -->
+        <div class="floating-decorations">
+            <div class="floating-item" style="--delay: 0s; --x: 10%;">🦋</div>
+            <div class="floating-item" style="--delay: 2s; --x: 70%;">🐝</div>
+            <div class="floating-item" style="--delay: 4s; --x: 40%;">🍃</div>
+            <div class="floating-item" style="--delay: 6s; --x: 80%;">✨</div>
+            <div class="floating-item" style="--delay: 8s; --x: 20%;">🌸</div>
+        </div>
+        
+        <!-- Barra del tempo -->
+        <div class="weather-bar">
+            <div class="weather-item">
+                <span class="weather-icon" id="weather-icon">☀️</span>
+                <span class="weather-text" id="weather-text">Primavera - Giorno 15</span>
+            </div>
+            <div class="weather-temp" id="weather-temp">22°C</div>
+        </div>
+    </div>
+    
+    <script src="main.js"></script>
+    <script src="configurator.js"></script>
+    <script>
+        console.log('🎮 Stream Hub inizializzato');
+        
+        let webcamStream = null;
+        let screenStream = null;
+        let controlsVisible = true;
+        
+        // Toggle controlli
+        function toggleControls() {
+            controlsVisible = !controlsVisible;
+            document.getElementById('stream-controls').style.display = controlsVisible ? 'block' : 'none';
+        }
+        
+        // Attiva webcam
+        async function startWebcam() {
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 300, height: 200 }, 
+                    audio: true 
+                });
+                document.getElementById('webcam-video').srcObject = webcamStream;
+                document.getElementById('webcam-container').style.display = 'block';
+                updateStreamStatus('📹 Webcam attiva');
+            } catch (error) {
+                alert('❌ Errore webcam: ' + error.message);
+            }
+        }
+        
+        // Condivisione schermo
+        async function startScreenShare() {
+            try {
+                screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                
+                // Qui potresti integrare con servizi di streaming
+                updateStreamStatus('🖥️ Screen sharing attivo');
+                alert('📺 Screen sharing attivo! Ora puoi streammare su Twitch/TikTok usando software come OBS e selezionando questo browser come sorgente.');
+            } catch (error) {
+                alert('❌ Errore screen share: ' + error.message);
+            }
+        }
+        
+        // Fullscreen
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // Toggle area gioco
+        function toggleGameArea() {
+            const gameArea = document.getElementById('game-area');
+            const checkbox = document.getElementById('show-game-area');
+            gameArea.style.display = checkbox.checked ? 'flex' : 'none';
+        }
+        
+        // Toggle chat
+        function toggleChat() {
+            const chatPanel = document.getElementById('chat-panel');
+            const checkbox = document.getElementById('show-chat');
+            chatPanel.style.display = checkbox.checked ? 'block' : 'none';
+        }
+        
+        // Apri controller in nuova finestra
+        function openController() {
+            const controllerURL = window.location.origin + '/controllo.html';
+            window.open(controllerURL, 'controller', 'width=800,height=600,scrollbars=yes,resizable=yes');
+            updateStreamStatus('🎛️ Controller aperto');
+        }
+        
+        // Apri Twitch
+        function openTwitch() {
+            window.open('https://www.twitch.tv/broadcast', '_blank');
+        }
+        
+        // Apri TikTok Live
+        function openTikTok() {
+            window.open('https://www.tiktok.com/live', '_blank');
+        }
+        
+        // Aggiorna status
+        function updateStreamStatus(status) {
+            document.getElementById('stream-status').textContent = status;
+        }
+        
+        // Sistema di aggiornamento overlay (stesso di prima)
+        function loadOverlayData() {
+            const data = JSON.parse(localStorage.getItem('stardew-overlay-data') || '{}');
+            
+            if (data.seeds) document.getElementById('seeds').textContent = data.seeds;
+            if (data.coins) document.getElementById('coins').textContent = data.coins;
+            if (data.farmingLevel) document.getElementById('farming-level').textContent = data.farmingLevel;
+            if (data.weatherIcon) document.getElementById('weather-icon').textContent = data.weatherIcon;
+            if (data.weatherText) document.getElementById('weather-text').textContent = data.weatherText;
+            if (data.weatherTemp) document.getElementById('weather-temp').textContent = data.weatherTemp;
+            if (data.recipeIcon) document.getElementById('recipe-icon').textContent = data.recipeIcon;
+            if (data.recipeName) document.getElementById('recipe-name').textContent = data.recipeName;
+            if (data.ingredient1) document.getElementById('ingredient1').textContent = data.ingredient1;
+            if (data.ingredient2) document.getElementById('ingredient2').textContent = data.ingredient2;
+            if (data.ingredient3) document.getElementById('ingredient3').textContent = data.ingredient3;
+        }
+        
+        // Controlla notifiche
+        function checkNotifications() {
+            const notificationData = localStorage.getItem('stardew-overlay-notification');
+            if (notificationData) {
+                const notification = JSON.parse(notificationData);
+                const notificationElement = document.getElementById('follow-notification');
+                const textElement = document.getElementById('notification-text');
+                
+                textElement.textContent = notification.message;
+                notificationElement.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    notificationElement.classList.add('hidden');
+                }, 3000);
+                
+                localStorage.removeItem('stardew-overlay-notification');
+            }
+        }
+        
+        // Aggiornamento automatico ogni 2 secondi
+        setInterval(() => {
+            loadOverlayData();
+            checkNotifications();
+        }, 2000);
+        
+        // Carica dati iniziali
+        loadOverlayData();
+        updateStreamStatus('📡 Stream Hub pronto');
+        
+        console.log('🚀 Stream Hub pronto per il broadcasting!');
+    </script>
+</body>
+</html>
