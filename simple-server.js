@@ -461,7 +461,29 @@ app.post('/api/direct-stream/start', async (req, res) => {
             return res.status(400).json({ error: 'Parametri mancanti' });
         }
 
+        // Verifica token valido e scope
+        console.log(`🔍 Verifica token per user_id: ${user_id}`);
+        const validateResponse = await fetch('https://id.twitch.tv/oauth2/validate', {
+            headers: {
+                'Authorization': `Bearer ${access_token}`
+            }
+        });
+
+        if (!validateResponse.ok) {
+            console.error(`❌ Token non valido: ${validateResponse.status}`);
+            return res.status(401).json({ error: 'Token non valido' });
+        }
+
+        const tokenData = await validateResponse.json();
+        console.log(`✅ Token valido. Scopes:`, tokenData.scopes);
+        
+        if (!tokenData.scopes.includes('channel:manage:broadcast')) {
+            console.error(`❌ Scope mancante: channel:manage:broadcast`);
+            return res.status(403).json({ error: 'Scope insufficienti - rifare autenticazione' });
+        }
+
         // Ottieni stream key
+        console.log(`🔑 Richiesta stream key per user_id: ${user_id}`);
         const streamKeyResponse = await fetch(`https://api.twitch.tv/helix/streams/key?broadcaster_id=${user_id}`, {
             headers: {
                 'Authorization': `Bearer ${access_token}`,
@@ -469,15 +491,21 @@ app.post('/api/direct-stream/start', async (req, res) => {
             }
         });
 
+        console.log(`🔑 Status response: ${streamKeyResponse.status}`);
+        
         if (!streamKeyResponse.ok) {
-            throw new Error('Impossibile ottenere stream key');
+            const errorText = await streamKeyResponse.text();
+            console.error(`❌ Errore stream key API: ${streamKeyResponse.status} - ${errorText}`);
+            throw new Error(`API Error: ${streamKeyResponse.status} - ${errorText}`);
         }
 
         const keyData = await streamKeyResponse.json();
+        console.log(`🔑 Risposta stream key:`, keyData);
         const streamKey = keyData.data[0]?.stream_key;
 
         if (!streamKey) {
-            throw new Error('Stream key non disponibile');
+            console.error(`❌ Stream key non trovata nei dati:`, keyData);
+            throw new Error('Stream key non disponibile nei dati API');
         }
 
         // Aggiorna info stream se fornito
