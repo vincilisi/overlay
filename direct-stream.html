@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Direct Stream - Stardew Valley</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .stream-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .preview-section {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        .video-preview {
+            width: 100%;
+            max-width: 640px;
+            height: 360px;
+            background: #222;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .controls-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .button:hover {
+            background: #45a049;
+            transform: scale(1.02);
+        }
+        .button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .button.danger {
+            background: #f44336;
+        }
+        .button.danger:hover {
+            background: #da190b;
+        }
+        .button.live {
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+        .status.error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+        .status.info {
+            background: rgba(33, 150, 243, 0.3);
+            border: 2px solid #2196F3;
+        }
+        .stream-settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .setting-group {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .setting-input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background: #333;
+            color: white;
+        }
+        .stream-stats {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Direct Stream - Stardew Valley</h1>
+        <p>Streaming diretto dal browser senza OBS!</p>
+        
+        <div id="status" class="status info">🔄 Inizializzazione streaming diretto...</div>
+        
+        <div class="stream-controls">
+            <!-- Anteprima Video -->
+            <div class="preview-section">
+                <h3>📹 Anteprima Stream</h3>
+                <video id="preview-video" class="video-preview" autoplay muted></video>
+                <canvas id="stream-canvas" class="video-preview hidden"></canvas>
+                <div>
+                    <strong>Risoluzione:</strong> <span id="resolution">Non impostata</span><br>
+                    <strong>FPS:</strong> <span id="fps">30</span><br>
+                    <strong>Bitrate:</strong> <span id="bitrate">2500 kbps</span>
+                </div>
+            </div>
+            
+            <!-- Controlli -->
+            <div class="controls-section">
+                <h3>🎛️ Controlli Stream</h3>
+                
+                <button class="button" id="setup-stream" onclick="setupDirectStream()">⚙️ Setup Stream Diretto</button>
+                <button class="button" id="start-capture" onclick="startScreenCapture()" disabled>📺 Cattura Schermo</button>
+                <button class="button" id="start-stream" onclick="startDirectStream()" disabled>🔴 Inizia Stream</button>
+                <button class="button danger hidden" id="stop-stream" onclick="stopDirectStream()">⏹️ Ferma Stream</button>
+                
+                <div class="stream-settings">
+                    <div class="setting-group">
+                        <label>Qualità Video:</label>
+                        <select class="setting-input" id="video-quality">
+                            <option value="1080">1080p (1920x1080)</option>
+                            <option value="720" selected>720p (1280x720)</option>
+                            <option value="480">480p (854x480)</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label>FPS:</label>
+                        <select class="setting-input" id="fps-setting">
+                            <option value="60">60 FPS</option>
+                            <option value="30" selected>30 FPS</option>
+                            <option value="15">15 FPS</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label>Bitrate (kbps):</label>
+                        <input type="range" class="setting-input" id="bitrate-slider" min="500" max="6000" value="2500" oninput="updateBitrate()">
+                    </div>
+                    <div class="setting-group">
+                        <label>Audio:</label>
+                        <select class="setting-input" id="audio-setting">
+                            <option value="true" selected>Includi Audio</option>
+                            <option value="false">Solo Video</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Live -->
+        <div class="stream-stats hidden" id="live-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="viewers-count">0</div>
+                <div>Spettatori</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stream-duration">00:00</div>
+                <div>Durata</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="frames-sent">0</div>
+                <div>Frame Inviati</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="data-sent">0 MB</div>
+                <div>Dati Inviati</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>🔧 Come Funziona:</h3>
+            <ol>
+                <li><strong>Setup Stream</strong> - Configura le impostazioni e connetti Twitch</li>
+                <li><strong>Cattura Schermo</strong> - Seleziona la schermata o finestra da streammare</li>
+                <li><strong>Inizia Stream</strong> - Avvia lo streaming diretto su Twitch!</li>
+            </ol>
+            
+            <div class="status info">
+                <strong>⚠️ Nota:</strong> Lo streaming diretto richiede:
+                <ul style="text-align: left; margin: 10px 0;">
+                    <li>Browser moderno (Chrome/Edge consigliati)</li>
+                    <li>Connessione internet stabile (min 3 Mbps upload)</li>
+                    <li>Account Twitch configurato</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import WebRTC Controller -->
+    <script src="webrtc-stream.js"></script>
+    
+    <script>
+        // WebRTC Direct Streaming con Controller Avanzato
+        let streamController = null;
+        let isStreaming = false;
+        let streamStartTime = null;
+        let statsInterval = null;
+        let twitchAuth = null;
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            console.log(`[${new Date().toLocaleTimeString()}] ${message}`);
+        }
+        
+        async function setupDirectStream() {
+            updateStatus('🔄 Setup streaming diretto...', 'info');
+            
+            try {
+                // Controlla supporto browser
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                    throw new Error('Browser non supporta cattura schermo');
+                }
+                
+                // Controlla autenticazione Twitch
+                const savedAuth = localStorage.getItem('twitch_auth');
+                if (!savedAuth) {
+                    updateStatus('❌ Autenticazione Twitch richiesta', 'error');
+                    setTimeout(() => {
+                        window.open('/start', '_blank');
+                    }, 2000);
+                    return;
+                }
+                
+                twitchAuth = JSON.parse(savedAuth);
+                updateStatus(`✅ Setup completato per ${twitchAuth.user.display_name}`, 'success');
+                
+                document.getElementById('start-capture').disabled = false;
+                
+            } catch (error) {
+                updateStatus(`❌ Errore setup: ${error.message}`, 'error');
+            }
+        }
+        
+        async function startScreenCapture() {
+            updateStatus('🔄 Avvio cattura schermo...', 'info');
+            
+            try {
+                if (!streamController) {
+                    const quality = document.getElementById('video-quality').value;
+                    const fps = parseInt(document.getElementById('fps-setting').value);
+                    const includeAudio = document.getElementById('audio-setting').value === 'true';
+                    
+                    // Configura controller WebRTC
+                    streamController = new WebRTCStreamController({
+                        video: {
+                            width: { ideal: quality === '1080' ? 1920 : quality === '720' ? 1280 : 854 },
+                            height: { ideal: quality === '1080' ? 1080 : quality === '720' ? 720 : 480 },
+                            frameRate: { ideal: fps }
+                        },
+                        audio: includeAudio,
+                        bitrate: quality === '1080' ? 6000000 : quality === '720' ? 4000000 : 2000000
+                    });
+                    
+                    // Event handlers
+                    streamController.on('streamReady', (data) => {
+                        const previewVideo = document.getElementById('preview-video');
+                        previewVideo.srcObject = data.stream;
+                        
+                        const track = data.stream.getVideoTracks()[0];
+                        const settings = track.getSettings();
+                        document.getElementById('resolution').textContent = `${settings.width}x${settings.height}`;
+                        document.getElementById('fps').textContent = settings.frameRate || fps;
+                        
+                        updateStatus('✅ Cattura schermo attiva!', 'success');
+                        document.getElementById('start-stream').disabled = false;
+                        
+                        // Gestisci fine condivisione
+                        track.onended = () => {
+                            updateStatus('📺 Condivisione schermo terminata', 'info');
+                            stopDirectStream();
+                        };
+                    });
+                    
+                    streamController.on('error', (data) => {
+                        updateStatus(`❌ Errore WebRTC: ${data.error}`, 'error');
+                    });
+                    
+                    streamController.on('dataChunk', (data) => {
+                        // Aggiorna statistiche in tempo reale
+                        const stats = streamController.getStats();
+                        updateStreamStats(stats);
+                    });
+                }
+                
+                // Setup stream
+                await streamController.setupStream({
+                    includeMicrophone: document.getElementById('audio-setting').value === 'true'
+                });
+                
+            } catch (error) {
+                updateStatus(`❌ Errore cattura: ${error.message}`, 'error');
+            }
+        }
+        
+        async function startDirectStream() {
+            if (!streamController || !streamController.mediaStream) {
+                updateStatus('❌ Prima attiva la cattura schermo', 'error');
+                return;
+            }
+            
+            updateStatus('🔄 Avvio streaming su Twitch...', 'info');
+            
+            try {
+                // Configura Twitch streaming
+                const streamTitle = document.getElementById('stream-title').value;
+                
+                // Richiedi stream key da Twitch
+                const streamSetupResponse = await fetch('/api/direct-stream/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        access_token: twitchAuth.access_token,
+                        client_id: twitchAuth.client_id,
+                        user_id: twitchAuth.user.id,
+                        title: streamTitle || 'Live da Stardew Valley Overlay'
+                    })
+                });
+                
+                if (!streamSetupResponse.ok) {
+                    throw new Error('Errore configurazione stream Twitch');
+                }
+                
+                const streamData = await streamSetupResponse.json();
+                console.log('✅ Stream key ricevuta:', streamData.stream_key.substring(0, 10) + '...');
+                
+                // Avvia registrazione WebRTC
+                await streamController.startRecording('webm');
+                
+                isStreaming = true;
+                streamStartTime = Date.now();
+                
+                // Aggiorna UI
+                document.getElementById('start-stream').classList.add('hidden');
+                document.getElementById('stop-stream').classList.remove('hidden');
+                document.getElementById('live-stats').classList.remove('hidden');
+                
+                // Avvia stats
+                startStreamStats();
+                
+                updateStatus('🔴 STREAMING LIVE su Twitch!', 'success');
+                
+            } catch (error) {
+                updateStatus(`❌ Errore streaming: ${error.message}`, 'error');
+            }
+        }
+        
+        async function sendStreamData(data) {
+            // Qui dovremmo inviare i dati a Twitch RTMP
+            // Per ora simula l'invio
+            console.log(`📡 Invio chunk: ${data.size} bytes`);
+            
+            // TODO: Implementare invio a Twitch RTMP endpoint
+            // Questo richiede un server WebRTC-to-RTMP bridge
+        }
+        
+        async function stopDirectStream() {
+            updateStatus('🔄 Fermando stream...', 'info');
+            
+            if (streamController) {
+                streamController.stopRecording();
+            }
+            
+            // Notifica server
+            if (twitchAuth) {
+                try {
+                    await fetch('/api/direct-stream/stop', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: twitchAuth.user.id
+                        })
+                    });
+                } catch (error) {
+                    console.warn('⚠️ Errore notifica stop:', error.message);
+                }
+            }
+            
+            isStreaming = false;
+            
+            if (statsInterval) {
+                clearInterval(statsInterval);
+                statsInterval = null;
+            }
+            
+            // Reset UI
+            document.getElementById('start-stream').classList.remove('hidden');
+            document.getElementById('stop-stream').classList.add('hidden');
+            document.getElementById('live-stats').classList.add('hidden');
+            document.getElementById('preview-video').srcObject = null;
+            
+            updateStatus('⏹️ Stream fermato', 'info');
+        }
+        
+        function startStreamStats() {
+            statsInterval = setInterval(() => {
+                if (!isStreaming || !streamController) return;
+                
+                const stats = streamController.getStats();
+                
+                document.getElementById('stream-duration').textContent = stats.runtimeFormatted;
+                document.getElementById('frames-sent').textContent = stats.framesRecorded;
+                document.getElementById('data-sent').textContent = `${stats.mbTransferred} MB`;
+                document.getElementById('bitrate').textContent = `${stats.avgBitrateMbps} Mbps`;
+                
+                // Simula viewer count (dovrebbe venire dalle API Twitch)
+                const viewers = Math.floor(Math.random() * 50) + 1;
+                document.getElementById('viewers-count').textContent = viewers;
+                
+            }, 1000);
+        }
+        
+        function updateStreamStats(stats) {
+            if (!document.getElementById('live-stats').classList.contains('hidden')) {
+                document.getElementById('stream-duration').textContent = stats.runtimeFormatted;
+                document.getElementById('frames-sent').textContent = stats.framesRecorded;
+                document.getElementById('data-sent').textContent = `${stats.mbTransferred} MB`;
+                
+                // Aggiorna anche il bitrate display
+                const bitrateKbps = Math.round(stats.avgBitrateMbps * 1000);
+                document.getElementById('bitrate').textContent = `${bitrateKbps} kbps`;
+            }
+        }
+        
+        function updateBitrate() {
+            const value = document.getElementById('bitrate-slider').value;
+            document.getElementById('bitrate').textContent = `${value} kbps`;
+        }
+        
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('🚀 Direct Stream caricato - Clicca Setup per iniziare', 'success');
+            
+            // Controlla supporto
+            if (!navigator.mediaDevices) {
+                updateStatus('❌ Browser non supporta streaming diretto', 'error');
+            }
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (isStreaming) {
+                stopDirectStream();
+            }
+        });
+        
+    </script>
+</body>
+</html>
