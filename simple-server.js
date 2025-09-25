@@ -87,7 +87,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
         // Estrai client_id e client_secret dallo state
         let clientId = process.env.TWITCH_CLIENT_ID;
         let clientSecret = process.env.TWITCH_CLIENT_SECRET;
-        
+
         // Prova a decodificare dallo state
         if (state) {
             try {
@@ -99,8 +99,8 @@ app.get('/auth/twitch/callback', async (req, res) => {
             }
         }
 
-        console.log('🔍 Debug auth:', { 
-            hasClientId: !!clientId, 
+        console.log('🔍 Debug auth:', {
+            hasClientId: !!clientId,
             hasClientSecret: !!clientSecret,
             code: code?.substring(0, 10) + '...',
             hasState: !!state
@@ -232,7 +232,7 @@ app.get('/', (req, res) => {
     // Check if start-simple.html exists
     const fs = require('fs');
     const startPath = path.join(__dirname, 'start-simple.html');
-    
+
     if (fs.existsSync(startPath)) {
         res.sendFile(startPath);
     } else {
