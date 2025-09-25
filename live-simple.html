@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Stardew Live - Modalità Semplice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .platform-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 15px;
+            border: 2px solid #4CAF50;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        .button.connected {
+            background: #2196F3;
+        }
+        .status {
+            background: #1a1a1a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .warning {
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌱 Stardew Valley Live Platform 🌱</h1>
+        <p>Versione Semplice - Sempre Funzionante</p>
+        
+        <div id="status" class="status">🔄 Inizializzazione...</div>
+        
+        <div class="platform-section">
+            <h2>💜 Twitch</h2>
+            <div id="twitch-status">❌ Non collegato</div>
+            <button class="button" id="twitch-btn" onclick="connectTwitch()">Collega Twitch</button>
+            <div id="twitch-info" style="display: none;">
+                <p>👤 Utente: <span id="twitch-user">-</span></p>
+                <p>📺 Stato: <span id="twitch-state">Demo Mode</span></p>
+            </div>
+        </div>
+        
+        <div class="platform-section">
+            <h2>🎵 TikTok</h2>
+            <div id="tiktok-status">❌ Non collegato</div>
+            <button class="button" id="tiktok-btn" onclick="connectTikTok()">Collega TikTok</button>
+            <div id="tiktok-info" style="display: none;">
+                <p>👤 Utente: <span id="tiktok-user">-</span></p>
+                <p>📺 Stato: <span id="tiktok-state">Demo Mode</span></p>
+            </div>
+        </div>
+        
+        <div class="platform-section">
+            <h2>🎮 Controlli Stream</h2>
+            <button class="button" id="go-live-btn" onclick="goLive()">🔴 VAI LIVE</button>
+            <button class="button" id="stop-btn" onclick="stopStream()" style="display: none;">⏹️ FERMA</button>
+        </div>
+        
+        <div class="platform-section">
+            <h2>🔧 Debug</h2>
+            <button class="button" onclick="showDebugInfo()">📊 Info Debug</button>
+            <button class="button" onclick="testConnection()">🔬 Test Connessione</button>
+            <a href="/debug" target="_blank">
+                <button class="button">🔍 Pagina Debug</button>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let twitchConnected = false;
+        let tiktokConnected = false;
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            console.log(`[${new Date().toLocaleTimeString()}] ${message}`);
+        }
+        
+        function connectTwitch() {
+            updateStatus('🔄 Connessione a Twitch...', 'warning');
+            
+            // Sempre modalità demo - GARANTITA
+            setTimeout(() => {
+                twitchConnected = true;
+                const randomUser = 'StreamerDemo_' + Math.random().toString(36).substr(2, 4);
+                
+                // Aggiorna UI
+                document.getElementById('twitch-status').innerHTML = '<span class="success">✅ Collegato (Demo)</span>';
+                document.getElementById('twitch-btn').textContent = '✅ Collegato';
+                document.getElementById('twitch-btn').classList.add('connected');
+                document.getElementById('twitch-user').textContent = randomUser;
+                document.getElementById('twitch-info').style.display = 'block';
+                
+                updateStatus(`✅ Twitch collegato come ${randomUser}`, 'success');
+                checkGoLiveButton();
+                
+            }, 1500);
+        }
+        
+        function connectTikTok() {
+            updateStatus('🔄 Connessione a TikTok...', 'warning');
+            
+            // Sempre modalità demo - GARANTITA
+            setTimeout(() => {
+                tiktokConnected = true;
+                const randomUser = 'TikTokerDemo_' + Math.random().toString(36).substr(2, 4);
+                
+                // Aggiorna UI
+                document.getElementById('tiktok-status').innerHTML = '<span class="success">✅ Collegato (Demo)</span>';
+                document.getElementById('tiktok-btn').textContent = '✅ Collegato';
+                document.getElementById('tiktok-btn').classList.add('connected');
+                document.getElementById('tiktok-user').textContent = randomUser;
+                document.getElementById('tiktok-info').style.display = 'block';
+                
+                updateStatus(`✅ TikTok collegato come ${randomUser}`, 'success');
+                checkGoLiveButton();
+                
+            }, 1500);
+        }
+        
+        function checkGoLiveButton() {
+            const goLiveBtn = document.getElementById('go-live-btn');
+            if (twitchConnected || tiktokConnected) {
+                goLiveBtn.disabled = false;
+                goLiveBtn.style.opacity = '1';
+                updateStatus('🎮 Pronto per andare live!', 'success');
+            }
+        }
+        
+        function goLive() {
+            if (!twitchConnected && !tiktokConnected) {
+                updateStatus('❌ Collega almeno una piattaforma!', 'error');
+                return;
+            }
+            
+            updateStatus('🔴 Simulazione stream avviato!', 'success');
+            document.getElementById('go-live-btn').style.display = 'none';
+            document.getElementById('stop-btn').style.display = 'inline-block';
+        }
+        
+        function stopStream() {
+            updateStatus('⏹️ Stream fermato', 'warning');
+            document.getElementById('go-live-btn').style.display = 'inline-block';
+            document.getElementById('stop-btn').style.display = 'none';
+        }
+        
+        function showDebugInfo() {
+            const info = {
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+                twitchConnected,
+                tiktokConnected,
+                userAgent: navigator.userAgent.substring(0, 100)
+            };
+            
+            console.log('🔍 Debug Info:', info);
+            alert('Debug info stampato nella console (F12)');
+        }
+        
+        function testConnection() {
+            updateStatus('🔬 Test connessione server...', 'warning');
+            
+            fetch('/test')
+                .then(response => response.json())
+                .then(data => {
+                    updateStatus(`✅ Server OK: ${data.message}`, 'success');
+                    console.log('Server response:', data);
+                })
+                .catch(error => {
+                    updateStatus(`❌ Errore server: ${error.message}`, 'error');
+                    console.error('Server error:', error);
+                });
+        }
+        
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('🚀 Pagina caricata - Modalità Semplice attiva', 'success');
+            
+            // Test automatico dopo 3 secondi
+            setTimeout(() => {
+                updateStatus('🔄 Test automatico Twitch...', 'warning');
+                connectTwitch();
+            }, 3000);
+        });
+        
+    </script>
+</body>
+</html>

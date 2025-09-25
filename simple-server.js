@@ -121,6 +121,32 @@ app.get('/live', (req, res) => {
     res.sendFile(path.join(__dirname, 'live-client.html'));
 });
 
+// Debug page
+app.get('/debug', (req, res) => {
+    res.sendFile(path.join(__dirname, 'debug-twitch.html'));
+});
+
+// Versione semplice
+app.get('/simple', (req, res) => {
+    res.sendFile(path.join(__dirname, 'live-simple.html'));
+});
+
+// Test endpoint
+app.get('/test', (req, res) => {
+    res.json({
+        status: 'ok',
+        message: 'Server funzionante!',
+        timestamp: new Date().toISOString(),
+        endpoints: [
+            '/ - Home',
+            '/live - Live Platform',
+            '/debug - Debug Twitch',
+            '/health - Health Check',
+            '/auth/twitch - Twitch Auth'
+        ]
+    });
+});
+
 // Start server (con error handling)
 app.listen(PORT, () => {
     const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;

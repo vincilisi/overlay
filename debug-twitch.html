@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔬 DEBUG TWITCH - Test Minimale</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #2d2d2d;
+            color: white;
+        }
+        .test-section {
+            background: #3d3d3d;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #4CAF50;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #45a049;
+        }
+        .status {
+            background: #1a1a1a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+        .log {
+            background: #0d1117;
+            color: #58a6ff;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔬 DEBUG TWITCH - Test Minimale</h1>
+    
+    <div class="test-section">
+        <h2>📊 Status</h2>
+        <div id="status" class="status">🔄 Inizializzazione...</div>
+        <div id="logs" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎮 Test Twitch</h2>
+        <button class="button" onclick="testTwitch()">🔗 Test Connessione Twitch</button>
+        <button class="button" onclick="testDemo()">🎭 Test Demo Mode</button>
+        <button class="button" onclick="clearLogs()">🧹 Pulisci Logs</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>💜 Twitch Auth</h2>
+        <div id="twitch-status">❌ Non collegato</div>
+        <button class="button" id="twitch-btn" onclick="connectTwitch()">Collega Twitch</button>
+    </div>
+
+    <script>
+        let logs = [];
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            logs.push(logMessage);
+            console.log(logMessage);
+            
+            const logDiv = document.getElementById('logs');
+            logDiv.innerHTML = logs.slice(-10).join('<br>'); // Ultimi 10 logs
+            
+            // Aggiorna anche status
+            document.getElementById('status').textContent = message;
+        }
+        
+        function clearLogs() {
+            logs = [];
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('status').textContent = '🧹 Logs puliti';
+        }
+        
+        // Test Twitch OAuth
+        function testTwitch() {
+            log('🔬 Avvio test Twitch OAuth...');
+            
+            try {
+                const testClientId = 'test_client_id_123';
+                const authUrl = `/auth/twitch?client_id=${testClientId}`;
+                
+                log(`🔗 URL generato: ${authUrl}`);
+                
+                // Test popup
+                const popup = window.open(authUrl, 'test-twitch', 'width=500,height=600');
+                
+                if (popup) {
+                    log('✅ Popup aperto con successo');
+                    
+                    // Simula chiusura dopo 5 secondi
+                    setTimeout(() => {
+                        if (!popup.closed) {
+                            popup.close();
+                            log('🔄 Popup chiuso automaticamente');
+                        }
+                    }, 5000);
+                    
+                } else {
+                    log('❌ Impossibile aprire popup - Popup bloccati?');
+                }
+                
+            } catch (error) {
+                log(`❌ Errore test Twitch: ${error.message}`);
+            }
+        }
+        
+        // Test Demo Mode
+        function testDemo() {
+            log('🎭 Test Demo Mode...');
+            
+            try {
+                const demoAuth = {
+                    demo: true,
+                    user: { 
+                        display_name: 'DemoUser_' + Math.random().toString(36).substr(2, 4), 
+                        id: 'demo123' 
+                    },
+                    connected: true,
+                    timestamp: Date.now()
+                };
+                
+                log(`👤 Demo user creato: ${demoAuth.user.display_name}`);
+                
+                // Simula successo
+                setTimeout(() => {
+                    document.getElementById('twitch-status').innerHTML = '✅ Collegato (Demo)';
+                    document.getElementById('twitch-btn').textContent = '✅ Demo Attivo';
+                    log('✅ Demo mode attivato con successo!');
+                }, 1000);
+                
+            } catch (error) {
+                log(`❌ Errore demo mode: ${error.message}`);
+            }
+        }
+        
+        // Connessione Twitch (versione semplificata)
+        function connectTwitch() {
+            log('🔄 connectTwitch() chiamata');
+            
+            try {
+                // Sempre modalità demo per test
+                log('🎮 Forza modalità demo...');
+                testDemo();
+                
+            } catch (error) {
+                log(`❌ Errore connectTwitch: ${error.message}`);
+                document.getElementById('status').textContent = `❌ Errore: ${error.message}`;
+            }
+        }
+        
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Pagina DEBUG caricata');
+            log('📍 URL corrente: ' + window.location.href);
+            log('🌐 User Agent: ' + navigator.userAgent.substring(0, 50) + '...');
+            log('✅ Pronto per i test!');
+        });
+        
+        // Test automatico dopo 2 secondi
+        setTimeout(() => {
+            log('🔄 Test automatico demo mode...');
+            testDemo();
+        }, 2000);
+        
+    </script>
+</body>
+</html>
