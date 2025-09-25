@@ -194,6 +194,10 @@
                         <input type="range" class="setting-input" id="bitrate-slider" min="500" max="6000" value="2500" oninput="updateBitrate()">
                     </div>
                     <div class="setting-group">
+                        <label>Titolo Stream:</label>
+                        <input type="text" class="setting-input" id="stream-title" placeholder="Live da Stardew Valley!" maxlength="140">
+                    </div>
+                    <div class="setting-group">
                         <label>Audio:</label>
                         <select class="setting-input" id="audio-setting">
                             <option value="true" selected>Includi Audio</option>
@@ -297,9 +301,13 @@
             
             try {
                 if (!streamController) {
-                    const quality = document.getElementById('video-quality').value;
-                    const fps = parseInt(document.getElementById('fps-setting').value);
-                    const includeAudio = document.getElementById('audio-setting').value === 'true';
+                    const qualityElement = document.getElementById('video-quality');
+                    const fpsElement = document.getElementById('fps-setting');
+                    const audioElement = document.getElementById('audio-setting');
+                    
+                    const quality = qualityElement ? qualityElement.value : '720';
+                    const fps = fpsElement ? parseInt(fpsElement.value) : 30;
+                    const includeAudio = audioElement ? audioElement.value === 'true' : true;
                     
                     // Configura controller WebRTC
                     streamController = new WebRTCStreamController({
@@ -363,7 +371,8 @@
             
             try {
                 // Configura Twitch streaming
-                const streamTitle = document.getElementById('stream-title').value;
+                const streamTitleElement = document.getElementById('stream-title');
+                const streamTitle = streamTitleElement ? streamTitleElement.value : 'Live da Stardew Valley Overlay';
                 
                 // Richiedi stream key da Twitch
                 const streamSetupResponse = await fetch('/api/direct-stream/start', {
@@ -388,9 +397,10 @@
                 if (!rtmpBridge) {
                     rtmpBridge = new RTMPStreamBridge({
                         rtmpUrl: streamData.rtmp_url,
-                        quality: document.getElementById('video-quality').value + 'p',
-                        fps: parseInt(document.getElementById('fps-setting').value),
-                        bitrate: parseInt(document.getElementById('bitrate-slider').value) * 1000
+                        quality: (qualityElement ? qualityElement.value : '720') + 'p',
+                        fps: fpsElement ? parseInt(fpsElement.value) : 30,
+                        bitrate: document.getElementById('bitrate-slider') ? 
+                                parseInt(document.getElementById('bitrate-slider').value) * 1000 : 4000000
                     });
                     
                     // Event handlers RTMP
