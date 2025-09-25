@@ -1,14 +1,14 @@
-// 🔄 REDIRECT FORZATO al server correttoconst express = require('express');
+// 🔄 REDIRECT FORZATO al server corretto// 🔄 REDIRECT FORZATO al server corretto
 
-console.log('🔄 auth-server.js deprecato - redirect a simple-server.js');const cors = require('cors');
+console.log('🔄 auth-server.js deprecato - redirect a simple-server.js');console.log('🔄 auth-server.js deprecato - redirect a simple-server.js');
 
-console.log('🚀 Avvio del server corretto...');const axios = require('axios');
+console.log('🚀 Avvio del server corretto...');console.log('🚀 Avvio del server corretto...');
 
-const path = require('path');
 
-// Avvia il server correttoconst app = express();
 
-require('./simple-server.js');const PORT = process.env.PORT || 3001;
+// Avvia il server corretto// Avvia il server corretto
+
+require('./simple-server.js');require('./simple-server.js');
 
 app.use(cors());
 app.use(express.json());
