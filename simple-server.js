@@ -1,83 +1,105 @@
-// 🚀 ULTRA MINIMAL SERVER con OAuth per RENDER
+// 🚀 ULTRA STABLE SERVER per RENDER
 const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware basics
-app.use(cors());
+// Solo middleware di base (no dipendenze esterne)
 app.use(express.static(__dirname));
 app.use(express.json());
 
-// Store temporaneo per le sessioni
-const authStore = new Map();
-
-// Configurazione OAuth dinamica (gestita dal frontend)
-function getTwitchConfig(clientId, clientSecret) {
-    const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-    return {
-        CLIENT_ID: clientId,
-        CLIENT_SECRET: clientSecret,
-        REDIRECT_URI: `${baseUrl}/auth/twitch/callback`
-    };
-}
-
-// === TWITCH AUTHENTICATION ===
-
-// Inizia autenticazione Twitch
-app.get('/auth/twitch', (req, res) => {
-    const { client_id, client_secret } = req.query;
-
-    if (!client_id) {
-        return res.status(400).send('❌ Client ID Twitch mancante. Configura le API keys nell\'overlay!');
+// CORS manuale (senza dipendenza)
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
     }
+    next();
+});
 
-    const TWITCH_CONFIG = getTwitchConfig(client_id, client_secret);
-    const scopes = 'user:read:email channel:read:stream_key channel:edit:commercial';
-    const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(TWITCH_CONFIG.REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scopes)}`;
+// === TWITCH AUTHENTICATION (SEMPLIFICATO) ===
 
-    console.log('🔗 Reindirizzamento a Twitch Auth:', authUrl);
+// Redirect per Twitch (senza dipendenze esterne)
+app.get('/auth/twitch', (req, res) => {
+    const { client_id } = req.query;
+    
+    if (!client_id) {
+        return res.status(400).send(`
+            <html>
+                <body style="font-family: Arial; text-align: center; padding: 50px; background: #ff4444; color: white;">
+                    <h2>❌ Configurazione Mancante</h2>
+                    <p>Client ID Twitch non trovato!</p>
+                    <p>Configura le API keys nell'overlay.</p>
+                    <script>setTimeout(() => window.close(), 3000);</script>
+                </body>
+            </html>
+        `);
+    }
+    
+    // Crea URL di redirect semplice
+    const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+    const redirectUri = encodeURIComponent(`${baseUrl}/auth/twitch/callback`);
+    const scopes = encodeURIComponent('user:read:email');
+    const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${client_id}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}`;
+    
+    console.log('🔗 Twitch Auth URL:', authUrl);
     res.redirect(authUrl);
 });
 
-// Callback Twitch
-app.get('/auth/twitch/callback', async (req, res) => {
-    const { code, state } = req.query;
-
-    if (!code) {
-        return res.status(400).send('❌ Codice di autorizzazione mancante');
-    }
-
-    try {
-        console.log('🔄 Scambio codice Twitch per token...');
-
-        // Per client-side OAuth, restituiamo il codice al frontend
-        res.send(`
+// Callback Twitch (semplificato)
+app.get('/auth/twitch/callback', (req, res) => {
+    const { code, error } = req.query;
+    
+    if (error) {
+        return res.send(`
             <html>
-                <head><title>Twitch Auth - Processing...</title></head>
-                <body style="font-family: Arial; text-align: center; padding: 50px; background: #9146ff; color: white;">
-                    <h2>🔄 Processando autenticazione Twitch...</h2>
-                    <p>Chiusura automatica in corso...</p>
-                    <script>
-                        // Comunica il codice al parent window per client-side processing
+                <body style="font-family: Arial; text-align: center; padding: 50px; background: #ff4444; color: white;">
+                    <h2>❌ Errore Twitch</h2>
+                    <p>Errore: ${error}</p>
+                    <script>setTimeout(() => window.close(), 3000);</script>
+                </body>
+            </html>
+        `);
+    }
+    
+    if (!code) {
+        return res.send(`
+            <html>
+                <body style="font-family: Arial; text-align: center; padding: 50px; background: #ff4444; color: white;">
+                    <h2>❌ Codice Mancante</h2>
+                    <p>Nessun codice di autorizzazione ricevuto.</p>
+                    <script>setTimeout(() => window.close(), 3000);</script>
+                </body>
+            </html>
+        `);
+    }
+    
+    // Successo - passa il codice al client
+    res.send(`
+        <html>
+            <head><title>Twitch - Successo!</title></head>
+            <body style="font-family: Arial; text-align: center; padding: 50px; background: #9146ff; color: white;">
+                <h2>🎉 Twitch Collegato!</h2>
+                <p>Chiusura automatica...</p>
+                <script>
+                    try {
                         window.opener.postMessage({
                             type: 'auth_code',
                             platform: 'twitch',
                             code: '${code}',
-                            state: '${state || ''}'
+                            success: true
                         }, '*');
-                        setTimeout(() => window.close(), 2000);
-                    </script>
-                </body>
-            </html>
-        `);
-
-    } catch (error) {
-        console.error('❌ Errore autenticazione Twitch:', error.message);
-        res.status(500).send('❌ Errore durante l\'autenticazione Twitch');
-    }
+                    } catch(e) {
+                        console.error('Errore comunicazione:', e);
+                    }
+                    setTimeout(() => window.close(), 2000);
+                </script>
+            </body>
+        </html>
+    `);
 });
 
 // Health check
@@ -99,18 +121,15 @@ app.get('/live', (req, res) => {
     res.sendFile(path.join(__dirname, 'live-client.html'));
 });
 
-// Utility function
-function generateSessionId() {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-}
-
-// Start
+// Start server (con error handling)
 app.listen(PORT, () => {
     const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-    console.log(`🚀 MEGA SERVER con OAuth su ${baseUrl}`);
-    console.log(`🌍 Health check: ${baseUrl}/health`);
-    console.log(`🎮 Live Platform: ${baseUrl}/live`);
-    console.log('');
-    console.log('✅ OAuth Twitch supportato!');
-    console.log('🔧 Configura Client ID/Secret nell\'overlay per usare Twitch');
+    console.log(`🚀 STABLE SERVER avviato su ${baseUrl}`);
+    console.log(`🌍 Health: ${baseUrl}/health`);
+    console.log(`🎮 Live: ${baseUrl}/live`);
+    console.log(`🔐 Auth: ${baseUrl}/auth/twitch`);
+    console.log('✅ Server stabile e funzionante!');
+}).on('error', (err) => {
+    console.error('❌ Errore server:', err.message);
+    process.exit(1);
 });
