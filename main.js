@@ -657,3 +657,133 @@ socket.onmessage = (event) => {
 
     // Puoi aggiungere altri tipi: updateRecipe, changeTheme, ecc.
 };
+
+// 🖥️ DESKTOP RESPONSIVE AUTO-DETECTION E CONTROLS
+class DesktopResponsiveManager {
+    constructor() {
+        this.init();
+        this.addControls();
+        this.setupAutoDetection();
+    }
+    
+    init() {
+        // Auto-applica desktop optimized se schermo grande
+        if (window.innerWidth >= 1200) {
+            document.body.classList.add('desktop-optimized');
+        }
+    }
+    
+    addControls() {
+        // Crea pulsante toggle desktop
+        const controlPanel = document.createElement('div');
+        controlPanel.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                z-index: 10000;
+                background: rgba(139, 195, 74, 0.9);
+                padding: 10px;
+                border-radius: 10px;
+                border: 2px solid #8BC34A;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                font-family: Arial, sans-serif;
+                user-select: none;
+            ">
+                <button id="desktop-toggle" style="
+                    background: #4CAF50;
+                    color: white;
+                    border: none;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                " onclick="desktopManager.toggle()">
+                    🖥️ Desktop Mode
+                </button>
+                <div style="font-size: 12px; color: #2E7D32; margin-top: 5px; text-align: center;">
+                    ${window.innerWidth}x${window.innerHeight}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(controlPanel);
+        
+        // Styling per il pulsante
+        const button = document.getElementById('desktop-toggle');
+        button.addEventListener('mouseenter', () => {
+            button.style.background = '#2E7D32';
+            button.style.transform = 'scale(1.05)';
+        });
+        button.addEventListener('mouseleave', () => {
+            button.style.background = '#4CAF50';
+            button.style.transform = 'scale(1)';
+        });
+    }
+    
+    toggle() {
+        const body = document.body;
+        const button = document.getElementById('desktop-toggle');
+        
+        if (body.classList.contains('desktop-optimized')) {
+            body.classList.remove('desktop-optimized');
+            button.textContent = '🖥️ Desktop Mode';
+            button.style.background = '#4CAF50';
+            console.log('✅ Desktop mode OFF - Layout originale');
+        } else {
+            body.classList.add('desktop-optimized');
+            button.textContent = '📱 Mobile Mode';
+            button.style.background = '#FF6F00';
+            console.log('✅ Desktop mode ON - Layout responsive');
+        }
+    }
+    
+    setupAutoDetection() {
+        // Auto-update su resize
+        window.addEventListener('resize', () => {
+            const resolutionDisplay = document.querySelector('[style*="font-size: 12px"]');
+            if (resolutionDisplay) {
+                resolutionDisplay.textContent = `${window.innerWidth}x${window.innerHeight}`;
+            }
+            
+            // Auto-attiva desktop mode per schermi grandi
+            if (window.innerWidth >= 1440 && !document.body.classList.contains('desktop-optimized')) {
+                this.toggle();
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl + D = Toggle Desktop Mode
+            if (e.ctrlKey && e.key === 'd') {
+                e.preventDefault();
+                this.toggle();
+            }
+            
+            // Ctrl + F = Fullscreen
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                this.toggleFullscreen();
+            }
+        });
+        
+        // Mostra info di debug
+        console.log(`🖥️ Desktop Responsive Manager attivo`);
+        console.log(`📏 Risoluzione: ${window.innerWidth}x${window.innerHeight}`);
+        console.log(`🎯 Modalità consigliata: ${window.innerWidth >= 1200 ? 'Desktop' : 'Mobile'}`);
+        console.log(`⌨️ Shortcuts: Ctrl+D (Desktop Mode), Ctrl+F (Fullscreen)`);
+    }
+    
+    toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(console.error);
+            console.log('🖥️ Fullscreen attivato');
+        } else {
+            document.exitFullscreen().catch(console.error);
+            console.log('🖥️ Fullscreen disattivato');
+        }
+    }
+}
+
+// Inizializza il manager desktop
+const desktopManager = new DesktopResponsiveManager();
