@@ -29,11 +29,11 @@ function getTwitchConfig(clientId, clientSecret) {
 // Inizia autenticazione Twitch
 app.get('/auth/twitch', (req, res) => {
     const { client_id, client_secret } = req.query;
-    
+
     if (!client_id) {
         return res.status(400).send('❌ Client ID Twitch mancante. Configura le API keys nell\'overlay!');
     }
-    
+
     const TWITCH_CONFIG = getTwitchConfig(client_id, client_secret);
     const scopes = 'user:read:email channel:read:stream_key channel:edit:commercial';
     const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(TWITCH_CONFIG.REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scopes)}`;

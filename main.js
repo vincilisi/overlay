@@ -671,11 +671,11 @@ class DesktopResponsiveManager {
         if (window.innerWidth >= 1200) {
             document.body.classList.add('desktop-optimized');
         }
-        
+
         // Forza centratura immediata
         this.forceCentering();
     }
-    
+
     forceCentering() {
         const container = document.querySelector('.overlay-container');
         if (container) {
@@ -684,7 +684,7 @@ class DesktopResponsiveManager {
             container.style.top = '50%';
             container.style.left = '50%';
             container.style.transformOrigin = 'center center';
-            
+
             // Mantiene il transform esistente ma aggiunge translate
             const currentTransform = container.style.transform;
             if (!currentTransform.includes('translate(-50%, -50%)')) {
@@ -694,7 +694,7 @@ class DesktopResponsiveManager {
                     container.style.transform = 'translate(-50%, -50%) scale(calc(min(100vw / 1920, 100vh / 1080)))';
                 }
             }
-            
+
             console.log('🎯 Centratura forzata applicata');
         }
     }
@@ -762,7 +762,7 @@ class DesktopResponsiveManager {
             button.style.background = '#FF6F00';
             console.log('✅ Desktop mode ON - Layout responsive');
         }
-        
+
         // Riapplica centratura dopo toggle
         setTimeout(() => this.forceCentering(), 100);
     }
@@ -779,7 +779,7 @@ class DesktopResponsiveManager {
             if (window.innerWidth >= 1440 && !document.body.classList.contains('desktop-optimized')) {
                 this.toggle();
             }
-            
+
             // Riapplica centratura dopo resize
             setTimeout(() => this.forceCentering(), 100);
         });
