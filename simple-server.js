@@ -1,6 +1,55 @@
 // 🚀 ULTRA STABLE SERVER per RENDER
 const express = require('express');
 const path = require('path');
+
+// Polyfill per fetch su Node.js 16
+if (typeof fetch === 'undefined') {
+    global.fetch = async (url, options = {}) => {
+        const https = require('https');
+        const http = require('http');
+        const { URLSearchParams } = require('url');
+        
+        return new Promise((resolve, reject) => {
+            const protocol = url.startsWith('https:') ? https : http;
+            const isPost = options.method === 'POST';
+            
+            const requestOptions = {
+                method: options.method || 'GET',
+                headers: options.headers || {}
+            };
+            
+            if (isPost && options.body) {
+                if (options.body instanceof URLSearchParams) {
+                    requestOptions.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+                } else {
+                    requestOptions.headers['Content-Type'] = 'application/json';
+                }
+            }
+            
+            const req = protocol.request(url, requestOptions, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                    resolve({
+                        ok: res.statusCode < 400,
+                        status: res.statusCode,
+                        json: () => Promise.resolve(JSON.parse(data)),
+                        text: () => Promise.resolve(data)
+                    });
+                });
+            });
+            
+            req.on('error', reject);
+            
+            if (isPost && options.body) {
+                req.write(options.body.toString());
+            }
+            
+            req.end();
+        });
+    };
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
