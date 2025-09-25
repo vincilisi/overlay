@@ -1,0 +1,45 @@
+{
+    "name": "stardew-overlay-live-platform",
+    "version": "2.0.0",
+    "description": "🌱 Stardew Valley Overlay con Streaming Live diretto su Twitch e TikTok",
+    "main": "auth-server.js",
+    "scripts": {
+        "start": "node simple-server.js",
+        "start:full": "node auth-server.js",
+        "build": "echo 'Build completed successfully'",
+        "dev": "nodemon auth-server.js",
+        "websocket": "node websocket-server.js"
+    },
+    "keywords": [
+        "stardew-valley",
+        "streaming",
+        "overlay",
+        "twitch",
+        "tiktok",
+        "oauth",
+        "live-streaming"
+    ],
+    "author": "Vincenzo",
+    "license": "MIT",
+    "dependencies": {
+        "express": "4.18.2",
+        "cors": "2.8.5",
+        "axios": "1.6.0",
+        "ws": "8.14.2",
+        "dotenv": "16.3.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/vincilisi/overlay.git"
+    },
+    "bugs": {
+        "url": "https://github.com/vincilisi/overlay/issues"
+    },
+    "homepage": "https://overlayfaffa.netlify.app"
+}

@@ -1,8 +1,6 @@
-# File non necessari per Netlify
+# File non necessari per deploy
 node_modules/
 *.backup
-websocket-server.js
-package*.json
 start.bat
 test-*.html
 
