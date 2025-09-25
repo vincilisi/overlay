@@ -1,13 +1,3 @@
-services:
-  - type: web
-    name: stardew-overlay-mega
-    env: node
-    region: frankfurt
-    plan: free
-    buildCommand: npm install --production
-    startCommand: node auth-server.js
-    envVars:
-      - key: NODE_ENV
-        value: production
-    healthCheckPath: /
-    numInstances: 1
+# 🚀 RENDER MEGA SIMPLE CONFIG
+buildCommand: npm install
+startCommand: node simple-server.js
