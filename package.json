@@ -2,7 +2,7 @@
     "name": "stardew-overlay-live-platform",
     "version": "2.0.0",
     "description": "🌱 Stardew Valley Overlay con Streaming Live diretto su Twitch e TikTok",
-    "main": "auth-server.js",
+    "main": "simple-server.js",
     "scripts": {
         "start": "node simple-server.js",
         "start:full": "node auth-server.js",

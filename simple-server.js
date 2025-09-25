@@ -196,6 +196,11 @@ app.get('/debug', (req, res) => {
     res.sendFile(path.join(__dirname, 'debug-twitch.html'));
 });
 
+// Stream setup page
+app.get('/stream-setup', (req, res) => {
+    res.sendFile(path.join(__dirname, 'stream-setup.html'));
+});
+
 // Versione semplice
 app.get('/simple', (req, res) => {
     res.sendFile(path.join(__dirname, 'live-simple.html'));
