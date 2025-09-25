@@ -377,7 +377,7 @@
             panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
         }
         
-        // Connessione Twitch (con debug completo)
+        // Connessione Twitch (modalità reale o demo)
         async function connectTwitch() {
             console.log('🔄 connectTwitch() chiamata');
             console.log('📋 streamingConfig:', streamingConfig);
@@ -385,49 +385,91 @@
             try {
                 updateStatus('🔄 Connessione a Twitch...');
                 
-                // Forza sempre modalità demo per test
-                console.log('🎮 Attivando modalità demo per test');
-                updateStatus('🎮 Modalità Demo - Test connessione');
+                // Controlla se abbiamo un'autenticazione salvata
+                const savedAuth = localStorage.getItem('twitch_auth');
+                if (savedAuth) {
+                    try {
+                        twitchAuth = JSON.parse(savedAuth);
+                        console.log('✅ Auth salvata trovata:', twitchAuth);
+                        
+                        if (!twitchAuth.demo) {
+                            // Verifica se l'auth è ancora valida
+                            const testResponse = await fetch('https://api.twitch.tv/helix/users', {
+                                headers: {
+                                    'Authorization': `Bearer ${twitchAuth.access_token}`,
+                                    'Client-Id': twitchAuth.client_id
+                                }
+                            });
+                            
+                            if (testResponse.ok) {
+                                console.log('✅ Auth reale valida');
+                                updateTwitchStatus(true);
+                                checkStreamButtonStatus();
+                                updateStatus(`✅ Twitch collegato - ${twitchAuth.user.display_name} (REALE)`);
+                                checkStreamStatus(); // Controlla status stream
+                                return;
+                            } else {
+                                console.log('❌ Auth scaduta');
+                                localStorage.removeItem('twitch_auth');
+                            }
+                        } else {
+                            // Modalità demo
+                            updateTwitchStatus(true);
+                            checkStreamButtonStatus();
+                            updateStatus('✅ Twitch collegato (Modalità Demo)');
+                            return;
+                        }
+                    } catch (e) {
+                        console.log('❌ Errore parsing auth:', e);
+                        localStorage.removeItem('twitch_auth');
+                    }
+                }
                 
-                setTimeout(() => {
-                    twitchAuth = {
-                        demo: true,
-                        user: { display_name: 'TestUser_' + Math.random().toString(36).substr(2, 4), id: 'demo123' },
-                        connected: true,
-                        timestamp: Date.now()
-                    };
+                // Verifica configurazione
+                const twitchConfig = localStorage.getItem('twitch_config');
+                if (!twitchConfig && !streamingConfig?.demo_mode) {
+                    updateStatus('❌ Configurazione Twitch mancante - usa stream-setup.html');
+                    return;
+                }
+                
+                // Modalità demo se non configurato
+                if (!twitchConfig || streamingConfig?.demo_mode) {
+                    console.log('🎮 Attivando modalità demo');
+                    updateStatus('🎮 Modalità Demo - Stream simulato');
                     
-                    console.log('✅ twitchAuth creato:', twitchAuth);
-                    updateTwitchStatus(true);
-                    checkStreamButtonStatus();
-                    updateStatus('✅ Twitch collegato (Modalità Test)');
-                }, 1000);
-                
-                return;
-                
-                // OAuth tramite server (più semplice)
-                const clientId = streamingConfig.twitch.client_id;
-                const clientSecret = streamingConfig.twitch.client_secret || '';
-                
-                const authUrl = `/auth/twitch?client_id=${clientId}&client_secret=${clientSecret}`;
-                console.log('🔗 Auth URL:', authUrl);
-                
-                // Apri popup
-                const popup = window.open(authUrl, 'twitch-auth', 'width=500,height=600');
-                
-                // Ascolta callback
-                const messageHandler = (event) => {
-                    if (event.data.type === 'auth_code' && event.data.platform === 'twitch') {
-                        popup.close();
-                        // Simula successo con il codice ricevuto
+                    setTimeout(() => {
                         twitchAuth = {
-                            platform: 'twitch',
-                            code: event.data.code,
-                            user: { display_name: 'User_' + Math.random().toString(36).substr(2, 5), id: 'temp_id' }
+                            demo: true,
+                            user: { display_name: 'TestUser_' + Math.random().toString(36).substr(2, 4), id: 'demo123' },
+                            connected: true,
+                            timestamp: Date.now()
                         };
+                        
+                        console.log('✅ twitchAuth demo creato:', twitchAuth);
                         updateTwitchStatus(true);
                         checkStreamButtonStatus();
-                        updateStatus(`✅ Twitch collegato con successo!`);
+                        updateStatus('✅ Twitch collegato (Modalità Demo)');
+                    }, 1000);
+                    return;
+                }
+                
+                // Autenticazione reale
+                const config = JSON.parse(twitchConfig);
+                const authUrl = `/auth/twitch?client_id=${config.client_id}&client_secret=${config.client_secret}`;
+                console.log('🔗 Auth URL reale:', authUrl);
+                
+                const popup = window.open(authUrl, 'twitch-auth', 'width=500,height=600');
+                
+                const messageHandler = (event) => {
+                    if (event.data.type === 'auth_success' && event.data.platform === 'twitch') {
+                        popup.close();
+                        twitchAuth = event.data;
+                        localStorage.setItem('twitch_auth', JSON.stringify(twitchAuth));
+                        
+                        updateTwitchStatus(true);
+                        checkStreamButtonStatus();
+                        updateStatus(`✅ Twitch collegato - ${twitchAuth.user.display_name} (REALE)`);
+                        checkStreamStatus(); // Auto-check
                         window.removeEventListener('message', messageHandler);
                     }
                 };
@@ -597,6 +639,46 @@
             }
         }
         
+        // Controlla status stream reale
+        async function checkStreamStatus() {
+            if (!twitchAuth || twitchAuth.demo) {
+                console.log('🎮 Modalità demo - stream simulato');
+                return;
+            }
+            
+            try {
+                console.log('🔄 Controllo status stream...');
+                const response = await fetch('/api/twitch/stream-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        access_token: twitchAuth.access_token,
+                        client_id: twitchAuth.client_id,
+                        user_id: twitchAuth.user.id
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.is_live) {
+                    console.log('🔴 Stream LIVE!', data);
+                    updateTwitchStatus(true, true);
+                    
+                    // Aggiorna info stream
+                    const channelDiv = document.getElementById('twitch-channel');
+                    if (channelDiv) {
+                        channelDiv.innerHTML = `${twitchAuth.user.display_name} - ${data.viewer_count || 0} spettatori`;
+                    }
+                } else {
+                    console.log('📺 Stream offline');
+                    updateTwitchStatus(true, false);
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore controllo stream:', error);
+            }
+        }
+        
         // Controlla pulsante stream
         function checkStreamButtonStatus() {
             const goLiveBtn = document.getElementById('go-live-btn');
@@ -695,6 +777,13 @@
             console.log('🔬 Test automatico connessione Twitch...');
             connectTwitch();
         }, 3000);
+        
+        // Controllo stream status ogni 30 secondi
+        setInterval(() => {
+            if (twitchAuth && !twitchAuth.demo) {
+                checkStreamStatus();
+            }
+        }, 30000);
         
         console.log('🚀 Client-Side Platform pronta!');
     </script>
