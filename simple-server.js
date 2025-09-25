@@ -24,7 +24,9 @@ app.use((req, res, next) => {
 
 // Redirect per Twitch (senza dipendenze esterne)
 app.get('/auth/twitch', (req, res) => {
-    const { client_id } = req.query;
+    const { client_id, client_secret } = req.query;
+
+    console.log('🔍 Auth request:', { hasClientId: !!client_id, hasClientSecret: !!client_secret });
 
     if (!client_id) {
         return res.status(400).send(`
@@ -32,18 +34,22 @@ app.get('/auth/twitch', (req, res) => {
                 <body style="font-family: Arial; text-align: center; padding: 50px; background: #ff4444; color: white;">
                     <h2>❌ Configurazione Mancante</h2>
                     <p>Client ID Twitch non trovato!</p>
-                    <p>Configura le API keys nell'overlay.</p>
-                    <script>setTimeout(() => window.close(), 3000);</script>
+                    <p>Usa la pagina di setup per configurare le credenziali.</p>
+                    <button onclick="window.open('/start', '_blank')" style="padding: 10px 20px; margin: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        🚀 Vai al Setup
+                    </button>
+                    <script>setTimeout(() => window.close(), 5000);</script>
                 </body>
             </html>
         `);
     }
 
-    // Crea URL di redirect semplice
+    // Crea URL di redirect con state per passare i parametri
     const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
     const redirectUri = encodeURIComponent(`${baseUrl}/auth/twitch/callback`);
-    const scopes = encodeURIComponent('user:read:email');
-    const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${client_id}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}`;
+    const scopes = encodeURIComponent('user:read:email channel:manage:broadcast user:read:subscriptions');
+    const state = encodeURIComponent(JSON.stringify({ client_id, client_secret }));
+    const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${client_id}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&state=${state}`;
 
     console.log('🔗 Twitch Auth URL:', authUrl);
     res.redirect(authUrl);
@@ -78,12 +84,52 @@ app.get('/auth/twitch/callback', async (req, res) => {
     }
 
     try {
-        // Estrai client_id e client_secret dallo state o URL
-        const clientId = req.query.client_id || process.env.TWITCH_CLIENT_ID;
-        const clientSecret = req.query.client_secret || process.env.TWITCH_CLIENT_SECRET;
+        // Estrai client_id e client_secret dallo state
+        let clientId = process.env.TWITCH_CLIENT_ID;
+        let clientSecret = process.env.TWITCH_CLIENT_SECRET;
+        
+        // Prova a decodificare dallo state
+        if (state) {
+            try {
+                const stateData = JSON.parse(decodeURIComponent(state));
+                clientId = stateData.client_id || clientId;
+                clientSecret = stateData.client_secret || clientSecret;
+            } catch (e) {
+                console.log('⚠️ Errore parsing state:', e.message);
+            }
+        }
+
+        console.log('🔍 Debug auth:', { 
+            hasClientId: !!clientId, 
+            hasClientSecret: !!clientSecret,
+            code: code?.substring(0, 10) + '...',
+            hasState: !!state
+        });
 
         if (!clientId || !clientSecret) {
-            throw new Error('Client ID o Secret mancanti');
+            // Se non abbiamo le credenziali, torniamo il codice al client
+            console.log('⚠️ Credenziali mancanti, ritorno codice al client');
+            return res.send(`
+                <html>
+                    <body style="font-family: Arial; text-align: center; padding: 50px; background: #ff9800; color: white;">
+                        <h2>🔑 Codice Ricevuto</h2>
+                        <p>Codice di autorizzazione ricevuto ma credenziali API mancanti.</p>
+                        <p>Usa la pagina di setup per configurare le tue credenziali Twitch.</p>
+                        <button onclick="window.open('/start', '_blank')" style="padding: 10px 20px; margin: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            🚀 Vai al Setup
+                        </button>
+                        <script>
+                            window.opener.postMessage({
+                                type: 'auth_code',
+                                platform: 'twitch',
+                                code: '${code}',
+                                message: 'Codice ricevuto - configurazione richiesta'
+                            }, '*');
+                            setTimeout(() => window.close(), 5000);
+                        </script>
+                    </body>
+                </html>
+            `);
         }
 
         console.log('🔄 Scambio codice per access token...');
