@@ -5,9 +5,9 @@
     "main": "simple-server.js",
     "scripts": {
         "start": "node simple-server.js",
-        "start:full": "node simple-server.js",
+        "start:full": "node simple-server.js", 
         "build": "echo 'Build completed successfully'",
-        "dev": "nodemon auth-server.js",
+        "dev": "node simple-server.js",
         "websocket": "node websocket-server.js"
     },
     "keywords": [

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Demo WebRTC Stream - Senza Auth</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: #45a049;
+            transform: scale(1.02);
+        }
+        .button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .button.danger {
+            background: #f44336;
+        }
+        .button.danger:hover {
+            background: #da190b;
+        }
+        .video-preview {
+            width: 100%;
+            max-width: 640px;
+            height: 360px;
+            background: #222;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+        .status.error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+        .status.info {
+            background: rgba(33, 150, 243, 0.3);
+            border: 2px solid #2196F3;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Demo WebRTC Stream</h1>
+        <p>Test dello streaming diretto dal browser senza autenticazione Twitch</p>
+        
+        <div id="status" class="status info">
+            🚀 WebRTC Demo caricato - Pronto per il test!
+        </div>
+        
+        <div class="controls">
+            <button id="start-capture" class="button">📹 Cattura Schermo</button>
+            <button id="start-stream" class="button" disabled>🔴 Avvia Recording</button>
+            <button id="stop-stream" class="button danger hidden">⏹️ Ferma Recording</button>
+        </div>
+        
+        <div>
+            <video id="preview-video" class="video-preview" autoplay muted></video>
+        </div>
+        
+        <div id="live-stats" class="stats hidden">
+            <div class="stat-card">
+                <div class="stat-value" id="stream-duration">00:00</div>
+                <div>Durata</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="frames-recorded">0</div>
+                <div>Frames</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="data-size">0 MB</div>
+                <div>Dati</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="bitrate-avg">0 Mbps</div>
+                <div>Bitrate</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import WebRTC Controller -->
+    <script src="webrtc-stream.js"></script>
+    
+    <script>
+        let streamController = null;
+        let isStreaming = false;
+        let statsInterval = null;
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        async function startScreenCapture() {
+            updateStatus('🔄 Avvio cattura schermo...', 'info');
+            
+            try {
+                if (!streamController) {
+                    // Setup WebRTC Controller
+                    streamController = new WebRTCStreamController({
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            frameRate: { ideal: 30 }
+                        },
+                        bitrate: 4000000 // 4 Mbps per 720p
+                    });
+                    
+                    // Event handlers
+                    streamController.on('streamReady', (data) => {
+                        const previewVideo = document.getElementById('preview-video');
+                        previewVideo.srcObject = data.stream;
+                        
+                        updateStatus('✅ Cattura schermo attiva!', 'success');
+                        document.getElementById('start-stream').disabled = false;
+                        
+                        // Gestisci fine condivisione
+                        const track = data.stream.getVideoTracks()[0];
+                        track.onended = () => {
+                            updateStatus('📺 Condivisione schermo terminata', 'info');
+                            stopDemo();
+                        };
+                    });
+                    
+                    streamController.on('error', (data) => {
+                        updateStatus(`❌ Errore WebRTC: ${data.error}`, 'error');
+                    });
+                    
+                    streamController.on('dataChunk', (data) => {
+                        updateDemoStats();
+                    });
+                }
+                
+                // Setup stream
+                await streamController.setupStream({
+                    includeMicrophone: true
+                });
+                
+            } catch (error) {
+                updateStatus(`❌ Errore cattura: ${error.message}`, 'error');
+            }
+        }
+        
+        async function startDemoStream() {
+            if (!streamController || !streamController.mediaStream) {
+                updateStatus('❌ Prima attiva la cattura schermo', 'error');
+                return;
+            }
+            
+            updateStatus('🔄 Avvio recording demo...', 'info');
+            
+            try {
+                // Avvia registrazione WebRTC
+                await streamController.startRecording('webm');
+                
+                isStreaming = true;
+                
+                // Aggiorna UI
+                document.getElementById('start-stream').classList.add('hidden');
+                document.getElementById('stop-stream').classList.remove('hidden');
+                document.getElementById('live-stats').classList.remove('hidden');
+                
+                // Avvia stats
+                startDemoStats();
+                
+                updateStatus('🔴 RECORDING DEMO ATTIVO!', 'success');
+                
+            } catch (error) {
+                updateStatus(`❌ Errore recording: ${error.message}`, 'error');
+            }
+        }
+        
+        async function stopDemo() {
+            if (streamController) {
+                streamController.stopRecording();
+            }
+            
+            isStreaming = false;
+            
+            if (statsInterval) {
+                clearInterval(statsInterval);
+                statsInterval = null;
+            }
+            
+            // Reset UI
+            document.getElementById('start-stream').classList.remove('hidden');
+            document.getElementById('stop-stream').classList.add('hidden');
+            document.getElementById('live-stats').classList.add('hidden');
+            document.getElementById('preview-video').srcObject = null;
+            
+            updateStatus('⏹️ Demo fermato', 'info');
+        }
+        
+        function startDemoStats() {
+            statsInterval = setInterval(() => {
+                if (!isStreaming || !streamController) return;
+                updateDemoStats();
+            }, 1000);
+        }
+        
+        function updateDemoStats() {
+            if (!streamController) return;
+            
+            const stats = streamController.getStats();
+            
+            document.getElementById('stream-duration').textContent = stats.runtimeFormatted;
+            document.getElementById('frames-recorded').textContent = stats.framesRecorded;
+            document.getElementById('data-size').textContent = `${stats.mbTransferred} MB`;
+            document.getElementById('bitrate-avg').textContent = `${stats.avgBitrateMbps} Mbps`;
+        }
+        
+        // Event listeners
+        document.getElementById('start-capture').addEventListener('click', startScreenCapture);
+        document.getElementById('start-stream').addEventListener('click', startDemoStream);
+        document.getElementById('stop-stream').addEventListener('click', stopDemo);
+        
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('🎮 WebRTC Demo caricato - Clicca "Cattura Schermo" per iniziare!', 'success');
+        });
+    </script>
+</body>
+</html>

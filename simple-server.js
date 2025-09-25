@@ -314,6 +314,11 @@ app.get('/direct-stream', (req, res) => {
     res.sendFile(path.join(__dirname, 'direct-stream.html'));
 });
 
+// Demo WebRTC (senza auth)
+app.get('/demo', (req, res) => {
+    res.sendFile(path.join(__dirname, 'demo-webrtc.html'));
+});
+
 // Versione semplice
 app.get('/simple', (req, res) => {
     res.sendFile(path.join(__dirname, 'live-simple.html'));
