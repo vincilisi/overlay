@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 // Redirect per Twitch (senza dipendenze esterne)
 app.get('/auth/twitch', (req, res) => {
     const { client_id } = req.query;
-    
+
     if (!client_id) {
         return res.status(400).send(`
             <html>
@@ -38,13 +38,13 @@ app.get('/auth/twitch', (req, res) => {
             </html>
         `);
     }
-    
+
     // Crea URL di redirect semplice
     const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
     const redirectUri = encodeURIComponent(`${baseUrl}/auth/twitch/callback`);
     const scopes = encodeURIComponent('user:read:email');
     const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${client_id}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}`;
-    
+
     console.log('🔗 Twitch Auth URL:', authUrl);
     res.redirect(authUrl);
 });
@@ -52,7 +52,7 @@ app.get('/auth/twitch', (req, res) => {
 // Callback Twitch (semplificato)
 app.get('/auth/twitch/callback', (req, res) => {
     const { code, error } = req.query;
-    
+
     if (error) {
         return res.send(`
             <html>
@@ -64,7 +64,7 @@ app.get('/auth/twitch/callback', (req, res) => {
             </html>
         `);
     }
-    
+
     if (!code) {
         return res.send(`
             <html>
@@ -76,7 +76,7 @@ app.get('/auth/twitch/callback', (req, res) => {
             </html>
         `);
     }
-    
+
     // Successo - passa il codice al client
     res.send(`
         <html>
