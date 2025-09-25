@@ -772,11 +772,34 @@
             console.log('⚠️ Nessuna configurazione - Demo mode attivo');
         }
         
-        // Test automatico Twitch dopo 3 secondi
-        setTimeout(() => {
-            console.log('🔬 Test automatico connessione Twitch...');
-            connectTwitch();
-        }, 3000);
+        // Controlla parametri URL per modalità
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        const auto = urlParams.get('auto');
+        
+        if (mode === 'demo' && auto === '1') {
+            // Modalità demo forzata
+            console.log('🎮 Modalità demo forzata da URL');
+            updateStatus('🎮 Modalità Demo Attivata - Dati simulati');
+            
+            setTimeout(() => {
+                twitchAuth = {
+                    demo: true,
+                    user: { display_name: 'DemoUser_' + Math.random().toString(36).substr(2, 4), id: 'demo123' },
+                    connected: true,
+                    timestamp: Date.now()
+                };
+                updateTwitchStatus(true);
+                checkStreamButtonStatus();
+                updateStatus('✅ Demo attivo - Stream simulato funzionante!');
+            }, 1000);
+        } else {
+            // Test automatico Twitch dopo 3 secondi (solo se non in modalità demo forzata)
+            setTimeout(() => {
+                console.log('🔬 Test automatico connessione Twitch...');
+                connectTwitch();
+            }, 3000);
+        }
         
         // Controllo stream status ogni 30 secondi
         setInterval(() => {

@@ -201,6 +201,11 @@ app.get('/stream-setup', (req, res) => {
     res.sendFile(path.join(__dirname, 'stream-setup.html'));
 });
 
+// Start page semplice (SEMPRE FUNZIONA)
+app.get('/start', (req, res) => {
+    res.sendFile(path.join(__dirname, 'start-simple.html'));
+});
+
 // Versione semplice
 app.get('/simple', (req, res) => {
     res.sendFile(path.join(__dirname, 'live-simple.html'));

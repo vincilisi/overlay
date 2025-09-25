@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Stardew Valley Streaming - FUNZIONA SEMPRE</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .mode-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .mode-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+        .mode-card:hover {
+            transform: scale(1.05);
+            border-color: #4CAF50;
+        }
+        .mode-card.selected {
+            border-color: #2196F3;
+            background: rgba(33, 150, 243, 0.2);
+        }
+        .mode-card h3 {
+            margin: 0 0 15px;
+            font-size: 24px;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        .button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+        .status.error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+        .status.info {
+            background: rgba(33, 150, 243, 0.3);
+            border: 2px solid #2196F3;
+        }
+        .overlay-preview {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid #4CAF50;
+        }
+        .streaming-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .info-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Stardew Valley Streaming Platform</h1>
+        <p>Overlay perfetto per streaming - Funziona SEMPRE! 🚀</p>
+        
+        <div id="status" class="status info">🌟 Seleziona la modalità di streaming</div>
+        
+        <!-- Selezione Modalità -->
+        <div class="mode-selector">
+            <div class="mode-card" onclick="selectMode('demo')">
+                <h3>🎮 Modalità Demo</h3>
+                <p>✅ Funziona subito<br>
+                ✅ Nessuna configurazione<br>
+                ✅ Dati simulati<br>
+                ✅ Perfetto per test</p>
+            </div>
+            <div class="mode-card" onclick="selectMode('real')">
+                <h3>🔴 Streaming Reale</h3>
+                <p>🔑 Richiede API Twitch<br>
+                📡 Dati live reali<br>
+                👥 Spettatori veri<br>
+                🎬 OBS Studio</p>
+            </div>
+        </div>
+        
+        <!-- Demo Mode -->
+        <div id="demo-mode" class="hidden">
+            <h2>🎮 Modalità Demo Attivata</h2>
+            <div class="status success">✅ Demo mode - Tutto simulato e funzionante!</div>
+            <button class="button" onclick="startDemo()">🚀 Avvia Overlay Demo</button>
+            
+            <div class="overlay-preview">
+                <h3>📺 Anteprima Overlay:</h3>
+                <div class="streaming-info">
+                    <div class="info-box">
+                        <strong>👤 Streamer</strong><br>
+                        <span id="demo-streamer">TestUser_Demo</span>
+                    </div>
+                    <div class="info-box">
+                        <strong>👥 Spettatori</strong><br>
+                        <span id="demo-viewers">42</span>
+                    </div>
+                    <div class="info-box">
+                        <strong>💰 Oggi</strong><br>
+                        <span id="demo-money">2,450g</span>
+                    </div>
+                    <div class="info-box">
+                        <strong>🌤️ Meteo</strong><br>
+                        <span id="demo-weather">Soleggiato</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Real Mode -->
+        <div id="real-mode" class="hidden">
+            <h2>🔴 Streaming Reale</h2>
+            <div class="status info">⚙️ Configurazione richiesta per streaming live</div>
+            
+            <div style="background: rgba(255, 193, 7, 0.2); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h3>📋 Requisiti per Streaming Reale:</h3>
+                <ol>
+                    <li><strong>Account Twitch Developer</strong> - <a href="https://dev.twitch.tv/console" target="_blank" style="color: #4CAF50;">Crea qui</a></li>
+                    <li><strong>Client ID e Secret</strong> dalla tua app Twitch</li>
+                    <li><strong>OBS Studio</strong> per lo streaming</li>
+                    <li><strong>Stream Key</strong> generata dall'app</li>
+                </ol>
+            </div>
+            
+            <button class="button" onclick="goToRealSetup()">⚙️ Setup Streaming Reale</button>
+            <button class="button" onclick="selectMode('demo')" style="background: #ff9800;">🎮 Usa Demo Invece</button>
+        </div>
+        
+        <!-- Link rapidi -->
+        <div style="margin-top: 40px; text-align: center;">
+            <h3>🔗 Link Rapidi:</h3>
+            <button class="button" onclick="openUrl('/live')" style="background: #2196F3;">🎭 Overlay Live</button>
+            <button class="button" onclick="openUrl('/debug')" style="background: #ff9800;">🔬 Debug Page</button>
+            <button class="button" onclick="openUrl('/')" style="background: #9C27B0;">🏠 Homepage</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedMode = null;
+        let demoInterval = null;
+        
+        function selectMode(mode) {
+            selectedMode = mode;
+            
+            // Nascondi tutte le sezioni
+            document.getElementById('demo-mode').classList.add('hidden');
+            document.getElementById('real-mode').classList.add('hidden');
+            
+            // Rimuovi selezione precedente
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Seleziona modalità
+            event.target.closest('.mode-card').classList.add('selected');
+            
+            // Mostra sezione corrispondente
+            if (mode === 'demo') {
+                document.getElementById('demo-mode').classList.remove('hidden');
+                updateStatus('🎮 Modalità Demo selezionata - Funziona subito!', 'success');
+            } else if (mode === 'real') {
+                document.getElementById('real-mode').classList.remove('hidden');
+                updateStatus('🔴 Modalità Reale selezionata - Setup richiesto', 'info');
+            }
+        }
+        
+        function startDemo() {
+            updateStatus('🚀 Avvio overlay demo in corso...', 'info');
+            
+            // Simula dati live
+            startDemoData();
+            
+            setTimeout(() => {
+                updateStatus('✅ Overlay demo attivo! Dati simulati in tempo reale', 'success');
+                
+                // Apri l'overlay in modalità demo
+                const demoUrl = `/live?mode=demo&auto=1`;
+                window.open(demoUrl, '_blank');
+            }, 2000);
+        }
+        
+        function startDemoData() {
+            let viewers = 42;
+            let money = 2450;
+            
+            demoInterval = setInterval(() => {
+                // Simula cambiamenti
+                viewers += Math.floor(Math.random() * 6) - 2;
+                viewers = Math.max(1, viewers);
+                
+                money += Math.floor(Math.random() * 200) - 50;
+                money = Math.max(0, money);
+                
+                document.getElementById('demo-viewers').textContent = viewers;
+                document.getElementById('demo-money').textContent = money + 'g';
+                
+                // Cambia meteo casualmente
+                const weather = ['☀️ Soleggiato', '🌧️ Pioggia', '❄️ Neve', '🌤️ Nuvoloso'];
+                if (Math.random() < 0.1) {
+                    document.getElementById('demo-weather').innerHTML = weather[Math.floor(Math.random() * weather.length)];
+                }
+            }, 5000);
+        }
+        
+        function goToRealSetup() {
+            updateStatus('🔄 Apertura setup streaming reale...', 'info');
+            window.open('/stream-setup', '_blank');
+        }
+        
+        function openUrl(path) {
+            window.open(path, '_blank');
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            console.log(`[${new Date().toLocaleTimeString()}] ${message}`);
+        }
+        
+        // Auto-start demo mode per comodità
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('🌟 Platform caricata - Seleziona modalità streaming', 'success');
+            
+            // Auto-seleziona demo se non specificato
+            setTimeout(() => {
+                if (!selectedMode) {
+                    updateStatus('💡 Demo mode consigliata per iniziare subito!', 'info');
+                }
+            }, 3000);
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (demoInterval) {
+                clearInterval(demoInterval);
+            }
+        });
+    </script>
+</body>
+</html>
