@@ -96,7 +96,7 @@ app.get('/auth/twitch', (req, res) => {
     // Crea URL di redirect con state per passare i parametri
     const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
     const redirectUri = encodeURIComponent(`${baseUrl}/auth/twitch/callback`);
-    const scopes = encodeURIComponent('user:read:email channel:manage:broadcast user:read:subscriptions');
+    const scopes = encodeURIComponent('user:read:email channel:manage:broadcast channel:read:stream_key user:read:subscriptions');
     const state = encodeURIComponent(JSON.stringify({ client_id, client_secret }));
     const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${client_id}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&state=${state}`;
 
@@ -476,7 +476,7 @@ app.post('/api/direct-stream/start', async (req, res) => {
 
         const tokenData = await validateResponse.json();
         console.log(`✅ Token valido. Scopes:`, tokenData.scopes);
-        
+
         if (!tokenData.scopes.includes('channel:manage:broadcast')) {
             console.error(`❌ Scope mancante: channel:manage:broadcast`);
             return res.status(403).json({ error: 'Scope insufficienti - rifare autenticazione' });
@@ -492,7 +492,7 @@ app.post('/api/direct-stream/start', async (req, res) => {
         });
 
         console.log(`🔑 Status response: ${streamKeyResponse.status}`);
-        
+
         if (!streamKeyResponse.ok) {
             const errorText = await streamKeyResponse.text();
             console.error(`❌ Errore stream key API: ${streamKeyResponse.status} - ${errorText}`);
