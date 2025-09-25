@@ -39,18 +39,18 @@ console.log('🚀 Server di autenticazione streaming avviato');
 // Inizia autenticazione Twitch con configurazione dinamica
 app.post('/auth/twitch/start', (req, res) => {
     const { client_id, client_secret } = req.body;
-    
+
     if (!client_id || !client_secret) {
         return res.status(400).json({ error: 'Client ID e Client Secret richiesti' });
     }
-    
+
     const config = getTwitchConfig(client_id, client_secret);
     const scopes = 'channel:manage:broadcast user:read:email user:read:subscriptions';
     const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${config.CLIENT_ID}&redirect_uri=${encodeURIComponent(config.REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scopes)}`;
-    
+
     // Salva temporaneamente la configurazione (in produzione usa database)
     authStore.set(`twitch_config_${client_id}`, config);
-    
+
     console.log('🔗 URL Twitch Auth generato per client:', client_id);
     res.json({ auth_url: authUrl });
 });
