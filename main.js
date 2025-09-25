@@ -665,14 +665,40 @@ class DesktopResponsiveManager {
         this.addControls();
         this.setupAutoDetection();
     }
-    
+
     init() {
         // Auto-applica desktop optimized se schermo grande
         if (window.innerWidth >= 1200) {
             document.body.classList.add('desktop-optimized');
         }
+        
+        // Forza centratura immediata
+        this.forceCentering();
     }
     
+    forceCentering() {
+        const container = document.querySelector('.overlay-container');
+        if (container) {
+            // Assicura posizione assoluta e centratura
+            container.style.position = 'absolute';
+            container.style.top = '50%';
+            container.style.left = '50%';
+            container.style.transformOrigin = 'center center';
+            
+            // Mantiene il transform esistente ma aggiunge translate
+            const currentTransform = container.style.transform;
+            if (!currentTransform.includes('translate(-50%, -50%)')) {
+                if (currentTransform) {
+                    container.style.transform = `translate(-50%, -50%) ${currentTransform}`;
+                } else {
+                    container.style.transform = 'translate(-50%, -50%) scale(calc(min(100vw / 1920, 100vh / 1080)))';
+                }
+            }
+            
+            console.log('🎯 Centratura forzata applicata');
+        }
+    }
+
     addControls() {
         // Crea pulsante toggle desktop
         const controlPanel = document.createElement('div');
@@ -708,7 +734,7 @@ class DesktopResponsiveManager {
             </div>
         `;
         document.body.appendChild(controlPanel);
-        
+
         // Styling per il pulsante
         const button = document.getElementById('desktop-toggle');
         button.addEventListener('mouseenter', () => {
@@ -720,11 +746,11 @@ class DesktopResponsiveManager {
             button.style.transform = 'scale(1)';
         });
     }
-    
+
     toggle() {
         const body = document.body;
         const button = document.getElementById('desktop-toggle');
-        
+
         if (body.classList.contains('desktop-optimized')) {
             body.classList.remove('desktop-optimized');
             button.textContent = '🖥️ Desktop Mode';
@@ -736,8 +762,11 @@ class DesktopResponsiveManager {
             button.style.background = '#FF6F00';
             console.log('✅ Desktop mode ON - Layout responsive');
         }
+        
+        // Riapplica centratura dopo toggle
+        setTimeout(() => this.forceCentering(), 100);
     }
-    
+
     setupAutoDetection() {
         // Auto-update su resize
         window.addEventListener('resize', () => {
@@ -745,13 +774,16 @@ class DesktopResponsiveManager {
             if (resolutionDisplay) {
                 resolutionDisplay.textContent = `${window.innerWidth}x${window.innerHeight}`;
             }
-            
+
             // Auto-attiva desktop mode per schermi grandi
             if (window.innerWidth >= 1440 && !document.body.classList.contains('desktop-optimized')) {
                 this.toggle();
             }
+            
+            // Riapplica centratura dopo resize
+            setTimeout(() => this.forceCentering(), 100);
         });
-        
+
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             // Ctrl + D = Toggle Desktop Mode
@@ -759,21 +791,21 @@ class DesktopResponsiveManager {
                 e.preventDefault();
                 this.toggle();
             }
-            
+
             // Ctrl + F = Fullscreen
             if (e.ctrlKey && e.key === 'f') {
                 e.preventDefault();
                 this.toggleFullscreen();
             }
         });
-        
+
         // Mostra info di debug
         console.log(`🖥️ Desktop Responsive Manager attivo`);
         console.log(`📏 Risoluzione: ${window.innerWidth}x${window.innerHeight}`);
         console.log(`🎯 Modalità consigliata: ${window.innerWidth >= 1200 ? 'Desktop' : 'Mobile'}`);
         console.log(`⌨️ Shortcuts: Ctrl+D (Desktop Mode), Ctrl+F (Fullscreen)`);
     }
-    
+
     toggleFullscreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(console.error);
