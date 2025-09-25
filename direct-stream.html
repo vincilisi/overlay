@@ -393,14 +393,18 @@
                 const streamData = await streamSetupResponse.json();
                 console.log('✅ Stream key ricevuta:', streamData.stream_key.substring(0, 10) + '...');
                 
+                // Ottieni elementi per configurazione RTMP
+                const qualityElement = document.getElementById('video-quality');
+                const fpsElement = document.getElementById('fps-setting');
+                const bitrateElement = document.getElementById('bitrate-slider');
+                
                 // Setup RTMP Bridge per Twitch
                 if (!rtmpBridge) {
                     rtmpBridge = new RTMPStreamBridge({
                         rtmpUrl: streamData.rtmp_url,
                         quality: (qualityElement ? qualityElement.value : '720') + 'p',
                         fps: fpsElement ? parseInt(fpsElement.value) : 30,
-                        bitrate: document.getElementById('bitrate-slider') ? 
-                                parseInt(document.getElementById('bitrate-slider').value) * 1000 : 4000000
+                        bitrate: bitrateElement ? parseInt(bitrateElement.value) * 1000 : 4000000
                     });
                     
                     // Event handlers RTMP
