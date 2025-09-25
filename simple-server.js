@@ -52,7 +52,7 @@ app.get('/auth/twitch', (req, res) => {
 // Callback Twitch (con token exchange reale)
 app.get('/auth/twitch/callback', async (req, res) => {
     const { code, error, state } = req.query;
-    
+
     if (error) {
         return res.send(`
             <html>
@@ -64,7 +64,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
             </html>
         `);
     }
-    
+
     if (!code) {
         return res.send(`
             <html>
@@ -76,18 +76,18 @@ app.get('/auth/twitch/callback', async (req, res) => {
             </html>
         `);
     }
-    
+
     try {
         // Estrai client_id e client_secret dallo state o URL
         const clientId = req.query.client_id || process.env.TWITCH_CLIENT_ID;
         const clientSecret = req.query.client_secret || process.env.TWITCH_CLIENT_SECRET;
-        
+
         if (!clientId || !clientSecret) {
             throw new Error('Client ID o Secret mancanti');
         }
-        
+
         console.log('🔄 Scambio codice per access token...');
-        
+
         // Scambia il codice per un access token (usando fetch nativo di Node.js 18+)
         const tokenUrl = 'https://id.twitch.tv/oauth2/token';
         const tokenParams = new URLSearchParams({
@@ -97,7 +97,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
             grant_type: 'authorization_code',
             redirect_uri: `${process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`}/auth/twitch/callback`
         });
-        
+
         const tokenResponse = await fetch(tokenUrl, {
             method: 'POST',
             headers: {
@@ -105,14 +105,14 @@ app.get('/auth/twitch/callback', async (req, res) => {
             },
             body: tokenParams
         });
-        
+
         if (!tokenResponse.ok) {
             throw new Error(`Token request failed: ${tokenResponse.status}`);
         }
-        
+
         const tokenData = await tokenResponse.json();
         const { access_token, refresh_token } = tokenData;
-        
+
         // Ottieni info utente
         const userResponse = await fetch('https://api.twitch.tv/helix/users', {
             headers: {
@@ -120,16 +120,16 @@ app.get('/auth/twitch/callback', async (req, res) => {
                 'Client-Id': clientId
             }
         });
-        
+
         if (!userResponse.ok) {
             throw new Error(`User request failed: ${userResponse.status}`);
         }
-        
+
         const userData = await userResponse.json();
         const user = userData.data[0];
-        
+
         console.log('✅ Autenticazione Twitch completata per:', user.display_name);
-        
+
         // Successo - passa i dati reali al client
         res.send(`
             <html>
@@ -158,7 +158,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
                 </body>
             </html>
         `);
-        
+
     } catch (error) {
         console.error('❌ Errore token exchange:', error.message);
         res.send(`
@@ -212,11 +212,11 @@ app.get('/simple', (req, res) => {
 app.post('/api/twitch/stream-key', async (req, res) => {
     try {
         const { access_token, client_id, user_id } = req.body;
-        
+
         if (!access_token || !client_id || !user_id) {
             return res.status(400).json({ error: 'Parametri mancanti' });
         }
-        
+
         // Ottieni stream key dalle API Twitch
         const response = await fetch(`https://api.twitch.tv/helix/streams/key?broadcaster_id=${user_id}`, {
             headers: {
@@ -224,18 +224,18 @@ app.post('/api/twitch/stream-key', async (req, res) => {
                 'Client-Id': client_id
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`Stream key request failed: ${response.status}`);
         }
-        
+
         const data = await response.json();
         const streamKey = data.data[0]?.stream_key;
-        
+
         if (!streamKey) {
             throw new Error('Stream key non disponibile');
         }
-        
+
         res.json({
             success: true,
             stream_key: streamKey,
@@ -249,9 +249,9 @@ app.post('/api/twitch/stream-key', async (req, res) => {
                 'Clicca "Avvia Streaming" in OBS'
             ]
         });
-        
+
         console.log('✅ Stream key generata con successo');
-        
+
     } catch (error) {
         console.error('❌ Errore stream key:', error.message);
         res.status(500).json({ error: error.message });
@@ -262,15 +262,15 @@ app.post('/api/twitch/stream-key', async (req, res) => {
 app.post('/api/twitch/update-stream', async (req, res) => {
     try {
         const { access_token, client_id, user_id, title, game_id } = req.body;
-        
+
         if (!access_token || !client_id || !user_id) {
             return res.status(400).json({ error: 'Parametri mancanti' });
         }
-        
+
         const updateData = {};
         if (title) updateData.title = title;
         if (game_id) updateData.game_id = game_id;
-        
+
         const response = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${user_id}`, {
             method: 'PATCH',
             headers: {
@@ -280,14 +280,14 @@ app.post('/api/twitch/update-stream', async (req, res) => {
             },
             body: JSON.stringify(updateData)
         });
-        
+
         if (!response.ok) {
             throw new Error(`Update stream failed: ${response.status}`);
         }
-        
+
         res.json({ success: true, message: 'Stream info aggiornate' });
         console.log('✅ Stream info aggiornate');
-        
+
     } catch (error) {
         console.error('❌ Errore update stream:', error.message);
         res.status(500).json({ error: error.message });
@@ -298,21 +298,21 @@ app.post('/api/twitch/update-stream', async (req, res) => {
 app.post('/api/twitch/stream-status', async (req, res) => {
     try {
         const { access_token, client_id, user_id } = req.body;
-        
+
         const response = await fetch(`https://api.twitch.tv/helix/streams?user_id=${user_id}`, {
             headers: {
                 'Authorization': `Bearer ${access_token}`,
                 'Client-Id': client_id
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`Stream status failed: ${response.status}`);
         }
-        
+
         const data = await response.json();
         const stream = data.data[0];
-        
+
         if (stream) {
             res.json({
                 is_live: true,
@@ -325,7 +325,7 @@ app.post('/api/twitch/stream-status', async (req, res) => {
         } else {
             res.json({ is_live: false });
         }
-        
+
     } catch (error) {
         console.error('❌ Errore stream status:', error.message);
         res.status(500).json({ error: error.message });
