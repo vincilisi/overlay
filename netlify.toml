@@ -1,0 +1,24 @@
+# Netlify configuration
+[build]
+  functions = "netlify/functions"
+  publish = "."
+
+# Redirects per le API
+[[redirects]]
+  from = "/auth/*"
+  to = "/.netlify/functions/auth"
+  status = 200
+
+[[redirects]]  
+  from = "/api/*"
+  to = "/.netlify/functions/auth"
+  status = 200
+
+# Headers di sicurezza
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

@@ -1,0 +1,11 @@
+# 🚀 Render.com Build Configuration
+buildCommand: npm install
+startCommand: node auth-server.js
+
+# Environment Variables (configura su Render.com)
+TWITCH_CLIENT_ID=your_twitch_client_id
+TWITCH_CLIENT_SECRET=your_twitch_client_secret
+TIKTOK_CLIENT_KEY=your_tiktok_client_key
+TIKTOK_CLIENT_SECRET=your_tiktok_client_secret
+NODE_ENV=production
+PORT=3001

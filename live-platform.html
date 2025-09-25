@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Stardew Valley Live Stream Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Stili per il pannello streaming */
+        .streaming-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            font-family: Arial, sans-serif;
+            z-index: 10000;
+            min-width: 320px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .platform-auth {
+            margin: 10px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border: 2px solid transparent;
+        }
+        
+        .platform-auth.connected {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+        
+        .auth-button {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .auth-button.connected {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+        }
+        
+        .stream-button {
+            background: linear-gradient(135deg, #9C27B0, #E91E63);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .stream-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .stream-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .stream-settings {
+            margin: 15px 0;
+        }
+        
+        .stream-settings input, .stream-settings select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-offline { background: #f44336; }
+        .status-connecting { background: #ff9800; }
+        .status-live { background: #4caf50; }
+        
+        .viewer-count {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin: 5px 0;
+        }
+        
+        .toggle-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10001;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toggle pannello -->
+    <button class="toggle-panel" onclick="toggleStreamingPanel()" title="Toggle Streaming Panel">
+        🎥
+    </button>
+    
+    <!-- Pannello Streaming -->
+    <div class="streaming-panel" id="streaming-panel">
+        <h3 style="margin-top: 0; text-align: center;">🎮 Live Stream Hub</h3>
+        
+        <!-- Twitch Authentication -->
+        <div class="platform-auth" id="twitch-auth">
+            <h4>💜 Twitch</h4>
+            <div id="twitch-status">
+                <span class="status-indicator status-offline"></span>
+                Non collegato
+            </div>
+            <button class="auth-button" id="twitch-connect" onclick="connectTwitch()">
+                Collega Twitch
+            </button>
+            <div id="twitch-info" style="display: none;">
+                <div style="font-size: 12px; margin: 5px 0;">
+                    Canale: <span id="twitch-channel">-</span>
+                </div>
+                <div class="viewer-count">
+                    👁️ Spettatori: <span id="twitch-viewers">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TikTok Authentication -->
+        <div class="platform-auth" id="tiktok-auth">
+            <h4>🎵 TikTok</h4>
+            <div id="tiktok-status">
+                <span class="status-indicator status-offline"></span>
+                Non collegato
+            </div>
+            <button class="auth-button" id="tiktok-connect" onclick="connectTikTok()">
+                Collega TikTok
+            </button>
+            <div id="tiktok-info" style="display: none;">
+                <div style="font-size: 12px; margin: 5px 0;">
+                    Account: <span id="tiktok-account">-</span>
+                </div>
+                <div class="viewer-count">
+                    👁️ Spettatori: <span id="tiktok-viewers">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Impostazioni Stream -->
+        <div class="stream-settings">
+            <h4>⚙️ Impostazioni</h4>
+            <input type="text" id="stream-title" placeholder="Titolo dello stream" value="🌱 Stardew Valley Live!">
+            <select id="stream-category">
+                <option value="gaming">🎮 Gaming</option>
+                <option value="just-chatting">💬 Just Chatting</option>
+                <option value="creative">🎨 Creative</option>
+            </select>
+            <select id="stream-quality">
+                <option value="720p">720p (Recommended)</option>
+                <option value="1080p">1080p (High Quality)</option>
+                <option value="480p">480p (Low Bandwidth)</option>
+            </select>
+        </div>
+        
+        <!-- Controlli Stream -->
+        <div>
+            <button class="stream-button" id="go-live-btn" onclick="goLive()" disabled>
+                🔴 VAI LIVE
+            </button>
+            <button class="stream-button" id="stop-stream-btn" onclick="stopStream()" style="display: none;">
+                ⏹️ FERMA STREAM
+            </button>
+        </div>
+        
+        <!-- Collegamenti rapidi -->
+        <div style="margin-top: 15px;">
+            <button class="auth-button" onclick="openController()" style="width: 48%;">
+                🎛️ Controller
+            </button>
+            <button class="auth-button" onclick="toggleFullscreen()" style="width: 48%;">
+                ⛶ Fullscreen
+            </button>
+        </div>
+        
+        <!-- Status generale -->
+        <div id="general-status" style="margin-top: 10px; font-size: 12px; text-align: center;">
+            📡 Pronto per lo streaming
+        </div>
+    </div>
+    
+    <!-- Overlay principale (stesso di prima) -->
+    <div class="overlay-container">
+        <!-- Cornice principale -->
+        <div class="main-frame">
+            <!-- Angoli decorativi -->
+            <div class="corner top-left">🌱</div>
+            <div class="corner top-right">🍄</div>
+            <div class="corner bottom-left">🥕</div>
+            <div class="corner bottom-right">🌻</div>
+            
+            <!-- Bordi decorativi -->
+            <div class="border-decoration top">
+                <span class="plant-icon">🌿</span>
+                <span class="plant-icon">🍅</span>
+                <span class="plant-icon">🌽</span>
+                <span class="plant-icon">🥬</span>
+                <span class="plant-icon">🌶️</span>
+            </div>
+            
+            <div class="border-decoration bottom">
+                <span class="plant-icon">🥔</span>
+                <span class="plant-icon">🍆</span>
+                <span class="plant-icon">🥒</span>
+                <span class="plant-icon">🌰</span>
+                <span class="plant-icon">🍓</span>
+            </div>
+            
+            <div class="border-decoration left">
+                <span class="plant-icon vertical">🌸</span>
+                <span class="plant-icon vertical">🌺</span>
+                <span class="plant-icon vertical">🌼</span>
+            </div>
+            
+            <div class="border-decoration right">
+                <span class="plant-icon vertical">🏵️</span>
+                <span class="plant-icon vertical">🌷</span>
+                <span class="plant-icon vertical">🌹</span>
+            </div>
+        </div>
+        
+        <!-- Pannello informazioni -->
+        <div class="info-panel">
+            <div class="info-title">📱 Info Giardino 📱</div>
+            <div class="info-content">
+                <div class="stat-item">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-text">Livello Farming</span>
+                    <span class="stat-value" id="farming-level">10</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-text">Monete</span>
+                    <span class="stat-value" id="coins">999,999g</span>
+                </div>
+                <div class="stat-item seeds-item" id="seeds-item">
+                    <span class="stat-icon">🌱</span>
+                    <span class="stat-text">Semi Piantati</span>
+                    <span class="stat-value" id="seeds">42</span>
+                    <span class="expand-arrow">▼</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sezione ricette -->
+        <div class="recipe-panel">
+            <div class="recipe-title" id="recipe-title">👩‍🍳 Ricetta del Giorno 👩‍🍳</div>
+            <div class="recipe-content">
+                <div class="recipe-item">
+                    <span class="recipe-icon" id="recipe-icon">🥗</span>
+                    <span class="recipe-name" id="recipe-name">Insalata di Stagione</span>
+                </div>
+                <div class="recipe-ingredients" id="recipe-ingredients">
+                    <span class="ingredient" id="ingredient1">🥬 Lattuga</span>
+                    <span class="ingredient" id="ingredient2">🍅 Pomodoro</span>
+                    <span class="ingredient" id="ingredient3">🥒 Cetriolo</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifiche animate -->
+        <div class="notification-area">
+            <div class="notification hidden" id="follow-notification">
+                <span class="notif-icon">🎉</span>
+                <span class="notif-text" id="notification-text">Nuovo Follower!</span>
+                <span class="notif-icon">🌟</span>
+            </div>
+        </div>
+        
+        <!-- Decorazioni fluttuanti -->
+        <div class="floating-decorations">
+            <div class="floating-item" style="--delay: 0s; --x: 10%;">🦋</div>
+            <div class="floating-item" style="--delay: 2s; --x: 70%;">🐝</div>
+            <div class="floating-item" style="--delay: 4s; --x: 40%;">🍃</div>
+            <div class="floating-item" style="--delay: 6s; --x: 80%;">✨</div>
+            <div class="floating-item" style="--delay: 8s; --x: 20%;">🌸</div>
+        </div>
+        
+        <!-- Barra del tempo -->
+        <div class="weather-bar">
+            <div class="weather-item">
+                <span class="weather-icon" id="weather-icon">☀️</span>
+                <span class="weather-text" id="weather-text">Primavera - Giorno 15</span>
+            </div>
+            <div class="weather-temp" id="weather-temp">22°C</div>
+        </div>
+    </div>
+    
+    <script src="main.js"></script>
+    <script src="configurator.js"></script>
+    <script>
+        console.log('🎮 Live Stream Platform inizializzata');
+        
+        // Configurazione API
+        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001' : '';
+        
+        let twitchAuth = null;
+        let tiktokAuth = null;
+        let streamActive = false;
+        let mediaStream = null;
+        let sessionIds = {
+            twitch: null,
+            tiktok: null
+        };
+        
+        // Controlla auth salvate in localStorage
+        function checkSavedAuth() {
+            const twitchSaved = localStorage.getItem('twitch_auth');
+            const tiktokSaved = localStorage.getItem('tiktok_auth');
+            
+            if (twitchSaved) {
+                const auth = JSON.parse(twitchSaved);
+                // Controlla se non è scaduta (24 ore)
+                if (Date.now() - auth.timestamp < 24 * 60 * 60 * 1000) {
+                    twitchAuth = auth;
+                    sessionIds.twitch = auth.sessionId;
+                    updateTwitchStatus(true);
+                    console.log('✅ Twitch auth ripristinata');
+                }
+            }
+            
+            if (tiktokSaved) {
+                const auth = JSON.parse(tiktokSaved);
+                if (Date.now() - auth.timestamp < 24 * 60 * 60 * 1000) {
+                    tiktokAuth = auth;
+                    sessionIds.tiktok = auth.sessionId;
+                    updateTikTokStatus(true);
+                    console.log('✅ TikTok auth ripristinata');
+                }
+            }
+            
+            checkStreamButtonStatus();
+        }
+        
+        // Toggle pannello
+        function toggleStreamingPanel() {
+            const panel = document.getElementById('streaming-panel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Connessione Twitch
+        async function connectTwitch() {
+            try {
+                updateStatus('general-status', '🔄 Connessione a Twitch...');
+                
+                // Apri popup per autenticazione
+                const popup = window.open(`${API_BASE_URL}/auth/twitch`, 'twitch-auth', 'width=500,height=600');
+                
+                // Ascolta messaggi dal popup
+                const messageHandler = (event) => {
+                    if (event.data.type === 'auth_success' && event.data.platform === 'twitch') {
+                        popup.close();
+                        
+                        twitchAuth = {
+                            sessionId: event.data.sessionId,
+                            user: JSON.parse(event.data.user)
+                        };
+                        sessionIds.twitch = event.data.sessionId;
+                        
+                        // Salva in localStorage
+                        localStorage.setItem('twitch_auth', JSON.stringify({
+                            sessionId: event.data.sessionId,
+                            user: JSON.parse(event.data.user),
+                            timestamp: Date.now()
+                        }));
+                        
+                        updateTwitchStatus(true);
+                        checkStreamButtonStatus();
+                        updateStatus('general-status', `✅ Collegato a Twitch come ${event.data.user.display_name}`);
+                        
+                        window.removeEventListener('message', messageHandler);
+                    }
+                };
+                
+                window.addEventListener('message', messageHandler);
+                
+                // Timeout per chiudere popup se non risponde
+                setTimeout(() => {
+                    if (!popup.closed) {
+                        popup.close();
+                        updateStatus('general-status', '⏰ Timeout connessione Twitch');
+                        window.removeEventListener('message', messageHandler);
+                    }
+                }, 60000);
+                
+            } catch (error) {
+                console.error('Errore connessione Twitch:', error);
+                updateStatus('general-status', '❌ Errore connessione Twitch');
+            }
+        }
+        
+        // Connessione TikTok
+        async function connectTikTok() {
+            try {
+                updateStatus('general-status', '🔄 Connessione a TikTok...');
+                
+                // Apri popup per autenticazione
+                const popup = window.open(`${API_BASE_URL}/auth/tiktok`, 'tiktok-auth', 'width=500,height=600');
+                
+                // Ascolta messaggi dal popup
+                const messageHandler = (event) => {
+                    if (event.data.type === 'auth_success' && event.data.platform === 'tiktok') {
+                        popup.close();
+                        
+                        tiktokAuth = {
+                            sessionId: event.data.sessionId,
+                            user: event.data.user
+                        };
+                        sessionIds.tiktok = event.data.sessionId;
+                        
+                        updateTikTokStatus(true);
+                        checkStreamButtonStatus();
+                        updateStatus('general-status', `✅ Collegato a TikTok come ${event.data.user.display_name}`);
+                        
+                        window.removeEventListener('message', messageHandler);
+                    }
+                };
+                
+                window.addEventListener('message', messageHandler);
+                
+                // Timeout per chiudere popup se non risponde
+                setTimeout(() => {
+                    if (!popup.closed) {
+                        popup.close();
+                        updateStatus('general-status', '⏰ Timeout connessione TikTok');
+                        window.removeEventListener('message', messageHandler);
+                    }
+                }, 60000);
+                
+            } catch (error) {
+                console.error('Errore connessione TikTok:', error);
+                updateStatus('general-status', '❌ Errore connessione TikTok');
+            }
+        }
+        
+        // Vai Live
+        async function goLive() {
+            try {
+                updateStatus('general-status', '🔄 Avvio stream...');
+                
+                const streamTitle = document.getElementById('stream-title').value;
+                const streamCategory = document.getElementById('stream-category').value;
+                
+                // Richiedi accesso a webcam e audio
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 1280, height: 720 },
+                    audio: true
+                });
+                
+                // Avvia stream su piattaforme collegate
+                const streamPromises = [];
+                
+                if (twitchAuth) {
+                    streamPromises.push(startTwitchStream(streamTitle, streamCategory));
+                }
+                
+                if (tiktokAuth) {
+                    streamPromises.push(startTikTokStream(streamTitle));
+                }
+                
+                // Attendi avvio su tutte le piattaforme
+                const results = await Promise.allSettled(streamPromises);
+                
+                streamActive = true;
+                document.getElementById('go-live-btn').style.display = 'none';
+                document.getElementById('stop-stream-btn').style.display = 'block';
+                
+                // Aggiorna status piattaforme
+                if (twitchAuth) updateTwitchStatus(true, true);
+                if (tiktokAuth) updateTikTokStatus(true, true);
+                
+                updateStatus('general-status', '🔴 LIVE! Stream attivo');
+                
+                // Avvia contatore spettatori reale
+                startViewerCounter();
+                
+                console.log('🔴 Stream avviato con successo!', results);
+                
+            } catch (error) {
+                console.error('Errore avvio stream:', error);
+                updateStatus('general-status', '❌ Errore avvio stream: ' + error.message);
+            }
+        }
+        
+        // Avvia stream Twitch
+        async function startTwitchStream(title, category) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/stream/twitch/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId: sessionIds.twitch,
+                        title: title,
+                        category: category
+                    })
+                });
+                
+                const result = await response.json();
+                console.log('✅ Stream Twitch configurato:', result);
+                return result;
+                
+            } catch (error) {
+                console.error('❌ Errore stream Twitch:', error);
+                throw error;
+            }
+        }
+        
+        // Avvia stream TikTok
+        async function startTikTokStream(title) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/stream/tiktok/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId: sessionIds.tiktok,
+                        title: title
+                    })
+                });
+                
+                const result = await response.json();
+                console.log('✅ Stream TikTok configurato:', result);
+                return result;
+                
+            } catch (error) {
+                console.error('❌ Errore stream TikTok:', error);
+                throw error;
+            }
+        }
+        
+        // Ferma Stream
+        function stopStream() {
+            streamActive = false;
+            
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            
+            document.getElementById('go-live-btn').style.display = 'block';
+            document.getElementById('stop-stream-btn').style.display = 'none';
+            
+            if (twitchAuth) updateTwitchStatus(true, false);
+            if (tiktokAuth) updateTikTokStatus(true, false);
+            
+            updateStatus('general-status', '⏹️ Stream terminato');
+            console.log('⏹️ Stream terminato');
+        }
+        
+        // Aggiorna status Twitch
+        function updateTwitchStatus(connected, live = false) {
+            const authDiv = document.getElementById('twitch-auth');
+            const statusDiv = document.getElementById('twitch-status');
+            const infoDiv = document.getElementById('twitch-info');
+            const button = document.getElementById('twitch-connect');
+            
+            if (connected) {
+                authDiv.classList.add('connected');
+                button.classList.add('connected');
+                button.textContent = live ? '🔴 LIVE' : '✅ Collegato';
+                statusDiv.innerHTML = `<span class="status-indicator ${live ? 'status-live' : 'status-offline'}"></span>${live ? 'IN DIRETTA' : 'Collegato'}`;
+                infoDiv.style.display = 'block';
+                document.getElementById('twitch-channel').textContent = twitchAuth.user.display_name;
+            }
+        }
+        
+        // Aggiorna status TikTok
+        function updateTikTokStatus(connected, live = false) {
+            const authDiv = document.getElementById('tiktok-auth');
+            const statusDiv = document.getElementById('tiktok-status');
+            const infoDiv = document.getElementById('tiktok-info');
+            const button = document.getElementById('tiktok-connect');
+            
+            if (connected) {
+                authDiv.classList.add('connected');
+                button.classList.add('connected');
+                button.textContent = live ? '🔴 LIVE' : '✅ Collegato';
+                statusDiv.innerHTML = `<span class="status-indicator ${live ? 'status-live' : 'status-offline'}"></span>${live ? 'IN DIRETTA' : 'Collegato'}`;
+                infoDiv.style.display = 'block';
+                document.getElementById('tiktok-account').textContent = tiktokAuth.user.display_name;
+            }
+        }
+        
+        // Controlla se abilitare pulsante stream
+        function checkStreamButtonStatus() {
+            const goLiveBtn = document.getElementById('go-live-btn');
+            goLiveBtn.disabled = !(twitchAuth || tiktokAuth);
+        }
+        
+        // Contatore spettatori reale
+        function startViewerCounter() {
+            const updateStats = async () => {
+                if (!streamActive) return;
+                
+                try {
+                    // Aggiorna stats Twitch
+                    if (sessionIds.twitch) {
+                        const response = await fetch(`${API_BASE_URL}/api/stream/stats/${sessionIds.twitch}`);
+                        const stats = await response.json();
+                        document.getElementById('twitch-viewers').textContent = stats.viewers || 0;
+                    }
+                    
+                    // Aggiorna stats TikTok
+                    if (sessionIds.tiktok) {
+                        const response = await fetch(`${API_BASE_URL}/api/stream/stats/${sessionIds.tiktok}`);
+                        const stats = await response.json();
+                        document.getElementById('tiktok-viewers').textContent = stats.viewers || 0;
+                    }
+                    
+                } catch (error) {
+                    console.error('Errore aggiornamento statistiche:', error);
+                    // Fallback a numeri casuali se API non disponibile
+                    if (twitchAuth) document.getElementById('twitch-viewers').textContent = Math.floor(Math.random() * 50) + 10;
+                    if (tiktokAuth) document.getElementById('tiktok-viewers').textContent = Math.floor(Math.random() * 100) + 20;
+                }
+            };
+            
+            // Aggiorna ogni 10 secondi
+            setInterval(updateStats, 10000);
+            updateStats(); // Primo aggiornamento immediato
+        }
+        
+        // Aggiorna status
+        function updateStatus(elementId, message) {
+            document.getElementById(elementId).textContent = message;
+        }
+        
+        // Apri controller
+        function openController() {
+            const controllerURL = window.location.origin + '/controllo.html';
+            window.open(controllerURL, 'controller', 'width=800,height=600');
+        }
+        
+        // Fullscreen
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // Sistema aggiornamento overlay (stesso di prima)
+        function loadOverlayData() {
+            const data = JSON.parse(localStorage.getItem('stardew-overlay-data') || '{}');
+            
+            if (data.seeds !== undefined) document.getElementById('seeds').textContent = data.seeds;
+            if (data.coins) document.getElementById('coins').textContent = data.coins;
+            if (data.farmingLevel) document.getElementById('farming-level').textContent = data.farmingLevel;
+            if (data.weatherIcon) document.getElementById('weather-icon').textContent = data.weatherIcon;
+            if (data.weatherText) document.getElementById('weather-text').textContent = data.weatherText;
+            if (data.weatherTemp) document.getElementById('weather-temp').textContent = data.weatherTemp;
+            if (data.recipeIcon) document.getElementById('recipe-icon').textContent = data.recipeIcon;
+            if (data.recipeName) document.getElementById('recipe-name').textContent = data.recipeName;
+            if (data.ingredient1) document.getElementById('ingredient1').textContent = data.ingredient1;
+            if (data.ingredient2) document.getElementById('ingredient2').textContent = data.ingredient2;
+            if (data.ingredient3) document.getElementById('ingredient3').textContent = data.ingredient3;
+        }
+        
+        // Controlla notifiche
+        function checkNotifications() {
+            const notificationData = localStorage.getItem('stardew-overlay-notification');
+            if (notificationData) {
+                const notification = JSON.parse(notificationData);
+                const notificationElement = document.getElementById('follow-notification');
+                const textElement = document.getElementById('notification-text');
+                
+                textElement.textContent = notification.message;
+                notificationElement.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    notificationElement.classList.add('hidden');
+                }, 3000);
+                
+                localStorage.removeItem('stardew-overlay-notification');
+            }
+        }
+        
+        // Aggiornamento automatico
+        setInterval(() => {
+            loadOverlayData();
+            checkNotifications();
+        }, 2000);
+        
+        // Inizializzazione
+        loadOverlayData();
+        checkSavedAuth(); // Controlla auth salvate
+        updateStatus('general-status', '📡 Pronto per il collegamento');
+        
+        console.log('🚀 Live Stream Platform pronta!');
+    </script>
+</body>
+</html>

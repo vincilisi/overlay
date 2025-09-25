@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  # RTMP Server ultra-performante
+  rtmp-server:
+    image: nginx:alpine
+    ports:
+      - "1935:1935"
+      - "8080:8080"
+    volumes:
+      - ./nginx-rtmp.conf:/etc/nginx/nginx.conf
+    restart: unless-stopped
+    
+  # WebSocket Server
+  websocket-server:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+    
+  # Redis per sessioni ultra-veloci
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    
+  # CDN proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/ssl
+    depends_on:
+      - rtmp-server
+      - websocket-server
+    restart: unless-stopped

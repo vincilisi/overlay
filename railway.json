@@ -1,0 +1,30 @@
+# 🚀 Railway.app - ULTRA PERFORMANCE GRATIS
+# Performance: ⚡⚡⚡⚡⚡ (5/5)
+# Costo: 🆓 $5 credito gratis al mese
+# Setup: 30 secondi
+
+version: 2
+services:
+  web:
+    build:
+      commands:
+        - npm install
+    start:
+      command: node auth-server.js
+    env:
+      NODE_ENV: production
+      PORT: ${{ PORT }}
+      TWITCH_CLIENT_ID: ${{ TWITCH_CLIENT_ID }}
+      TWITCH_CLIENT_SECRET: ${{ TWITCH_CLIENT_SECRET }}
+      TIKTOK_CLIENT_KEY: ${{ TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ TIKTOK_CLIENT_SECRET }}
+    
+    # Auto-scaling per performance mega
+    resources:
+      cpu: 2
+      memory: 1GB
+      
+    # Health check ultra-veloce
+    healthcheck:
+      path: /health
+      interval: 30s
