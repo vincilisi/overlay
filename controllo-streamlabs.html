@@ -271,6 +271,7 @@
             
             <div class="quick-buttons">
                 <button class="button" onclick="testSistema()">🧪 Test Completo</button>
+                <button class="button" onclick="debugGenerazione()">🔍 Debug URL</button>
                 <button class="button" onclick="copiaURL()">📋 Copia URL Principale</button>
                 <button class="button" onclick="copiaURLAlternativo()">📋 Copia URL Alternativo</button>
             </div>
@@ -285,13 +286,23 @@
             try {
                 const baseURL = window.location.origin + '/streamlabs.html';
                 const data = raccogliDati();
-                const encoded = btoa(JSON.stringify(data));
+                console.log('📦 Dati da codificare:', data);
+                
+                // Converti in stringa JSON
+                const jsonString = JSON.stringify(data);
+                console.log('📝 JSON string:', jsonString);
+                
+                // Codifica in Base64 (gestisce anche caratteri speciali)
+                const encoded = btoa(unescape(encodeURIComponent(jsonString)));
+                console.log('🔐 Encoded:', encoded.substring(0, 50) + '...');
+                
                 const fullURL = baseURL + '#' + encoded;
                 console.log('🔗 URL Streamlabs generato:', fullURL);
                 return fullURL;
             } catch (error) {
                 console.error('❌ Errore generazione URL Streamlabs:', error);
-                return 'Errore nella generazione URL';
+                console.error('❌ Stack trace:', error.stack);
+                return 'Errore: ' + error.message;
             }
         }
         
@@ -300,13 +311,24 @@
             try {
                 const baseURL = window.location.origin + '/index.html';
                 const data = raccogliDati();
-                const params = new URLSearchParams(data);
-                const fullURL = baseURL + '?' + params.toString();
+                console.log('📦 Dati per URL params:', data);
+                
+                // Crea manualmente i parametri per evitare problemi con emoji
+                const params = [];
+                for (const [key, value] of Object.entries(data)) {
+                    if (value !== null && value !== undefined) {
+                        params.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+                    }
+                }
+                
+                const queryString = params.join('&');
+                const fullURL = baseURL + '?' + queryString;
                 console.log('🔗 URL Alternativo generato:', fullURL);
                 return fullURL;
             } catch (error) {
                 console.error('❌ Errore generazione URL alternativo:', error);
-                return 'Errore nella generazione URL';
+                console.error('❌ Stack trace:', error.stack);
+                return 'Errore: ' + error.message;
             }
         }
         
@@ -416,6 +438,35 @@
             } else {
                 showMessage('⚠️ Inserisci un messaggio!', 'error');
             }
+        }
+        
+        // Debug generazione URL
+        function debugGenerazione() {
+            console.log('🔍 === DEBUG GENERAZIONE URL ===');
+            console.log('🌐 Origin:', window.location.origin);
+            
+            const data = raccogliDati();
+            console.log('📊 Dati raccolti:', data);
+            
+            console.log('🧪 Test btoa...');
+            try {
+                const testString = '{"test":"hello"}';
+                const testEncoded = btoa(testString);
+                console.log('✅ btoa funziona:', testEncoded);
+            } catch (e) {
+                console.error('❌ btoa non funziona:', e);
+            }
+            
+            console.log('🧪 Test encodeURIComponent...');
+            try {
+                const testEmoji = encodeURIComponent('🌱');
+                console.log('✅ encodeURIComponent funziona:', testEmoji);
+            } catch (e) {
+                console.error('❌ encodeURIComponent non funziona:', e);
+            }
+            
+            aggiornaURLMostrato();
+            showMessage('🔍 Debug completato! Controlla la console (F12)');
         }
         
         // Test completo del sistema
