@@ -181,9 +181,17 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Root
+// Root - redirect to start page if available
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    // Check if start-simple.html exists
+    const fs = require('fs');
+    const startPath = path.join(__dirname, 'start-simple.html');
+    
+    if (fs.existsSync(startPath)) {
+        res.sendFile(startPath);
+    } else {
+        res.sendFile(path.join(__dirname, 'index.html'));
+    }
 });
 
 // Live platform
