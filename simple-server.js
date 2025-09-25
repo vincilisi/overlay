@@ -451,11 +451,11 @@ app.post('/api/twitch/stream-status', async (req, res) => {
 app.post('/api/direct-stream/start', async (req, res) => {
     try {
         const { access_token, client_id, user_id, title } = req.body;
-        
+
         if (!access_token || !client_id || !user_id) {
             return res.status(400).json({ error: 'Parametri mancanti' });
         }
-        
+
         // Ottieni stream key
         const streamKeyResponse = await fetch(`https://api.twitch.tv/helix/streams/key?broadcaster_id=${user_id}`, {
             headers: {
@@ -463,18 +463,18 @@ app.post('/api/direct-stream/start', async (req, res) => {
                 'Client-Id': client_id
             }
         });
-        
+
         if (!streamKeyResponse.ok) {
             throw new Error('Impossibile ottenere stream key');
         }
-        
+
         const keyData = await streamKeyResponse.json();
         const streamKey = keyData.data[0]?.stream_key;
-        
+
         if (!streamKey) {
             throw new Error('Stream key non disponibile');
         }
-        
+
         // Aggiorna info stream se fornito
         if (title) {
             await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${user_id}`, {
@@ -487,7 +487,7 @@ app.post('/api/direct-stream/start', async (req, res) => {
                 body: JSON.stringify({ title })
             });
         }
-        
+
         res.json({
             success: true,
             stream_key: streamKey,
@@ -495,9 +495,9 @@ app.post('/api/direct-stream/start', async (req, res) => {
             message: 'Stream key ottenuta - ready per direct streaming',
             browser_streaming: true
         });
-        
+
         console.log('✅ Direct stream setup completato');
-        
+
     } catch (error) {
         console.error('❌ Errore direct stream setup:', error.message);
         res.status(500).json({ error: error.message });
@@ -508,29 +508,29 @@ app.post('/api/direct-stream/start', async (req, res) => {
 app.post('/api/direct-stream/data', (req, res) => {
     // Placeholder per gestire chunk di streaming WebRTC
     const { chunkSize, quality, timestamp } = req.body;
-    
+
     // Log streaming activity
     if (chunkSize) {
         console.log(`📡 Stream chunk ricevuto: ${chunkSize} bytes @ ${quality || '720p'}`);
     }
-    
-    res.json({ 
-        success: true, 
+
+    res.json({
+        success: true,
         message: 'Stream data ricevuti',
-        processed: true 
+        processed: true
     });
 });
 
 // Stop streaming diretto  
 app.post('/api/direct-stream/stop', (req, res) => {
     const { user_id } = req.body;
-    
+
     console.log(`🛑 Direct stream fermato per user: ${user_id || 'unknown'}`);
-    
-    res.json({ 
-        success: true, 
+
+    res.json({
+        success: true,
         message: 'Direct stream fermato',
-        cleanup: true 
+        cleanup: true
     });
 });
 
@@ -542,7 +542,7 @@ app.get('/test', (req, res) => {
         timestamp: new Date().toISOString(),
         endpoints: [
             '/ - Home',
-            '/live - Live Platform', 
+            '/live - Live Platform',
             '/direct-stream - Direct Browser Streaming',
             '/debug - Debug Twitch',
             '/health - Health Check',
