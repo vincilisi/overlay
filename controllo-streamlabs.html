@@ -139,11 +139,15 @@
         <h1>🎛️ Controllo Overlay</h1>
         
         <div class="url-info">
-            <h3>📺 URL per Streamlabs/OBS:</h3>
+            <h3>📺 URL per Streamlabs/OBS (Raccomandato):</h3>
             <div class="url-box" id="streamlabs-url">
                 Generando URL personalizzato...
             </div>
-            <p><strong>⚠️ Usa questo URL nel Browser Source di Streamlabs!</strong></p>
+            <h3>📺 URL Alternativo:</h3>
+            <div class="url-box" id="alternative-url">
+                Generando URL alternativo...
+            </div>
+            <p><strong>⚠️ Prova prima il primo URL, se non funziona usa l'alternativo!</strong></p>
         </div>
         
         <div class="status-message" id="status-message"></div>
@@ -267,7 +271,8 @@
             
             <div class="quick-buttons">
                 <button class="button" onclick="testSistema()">🧪 Test Completo</button>
-                <button class="button" onclick="copiaURL()">📋 Copia URL Streamlabs</button>
+                <button class="button" onclick="copiaURL()">📋 Copia URL Principale</button>
+                <button class="button" onclick="copiaURLAlternativo()">📋 Copia URL Alternativo</button>
             </div>
         </div>
     </div>
@@ -275,18 +280,28 @@
     <script>
         console.log('🎛️ Pannello di controllo inizializzato - Modalità URL Parameters');
         
-        // Genera URL personalizzato per Streamlabs
+        // Genera URL personalizzato per Streamlabs (Hash Fragment)
         function generaURLStreamlabs() {
+            const baseURL = window.location.origin + '/streamlabs.html';
+            const data = raccogliDati();
+            const encoded = btoa(JSON.stringify(data));
+            return baseURL + '#' + encoded;
+        }
+        
+        // Genera URL alternativo (URL Parameters)
+        function generaURLAlternativo() {
             const baseURL = window.location.origin + '/index.html';
             const data = raccogliDati();
             const params = new URLSearchParams(data);
             return baseURL + '?' + params.toString();
         }
         
-        // Aggiorna l'URL mostrato
+        // Aggiorna gli URL mostrati
         function aggiornaURLMostrato() {
             const url = generaURLStreamlabs();
+            const altUrl = generaURLAlternativo();
             document.getElementById('streamlabs-url').textContent = url;
+            document.getElementById('alternative-url').textContent = altUrl;
         }
         
         // Funzione per mostrare messaggi di stato
@@ -378,7 +393,15 @@
         function copiaURL() {
             const url = generaURLStreamlabs();
             navigator.clipboard.writeText(url).then(() => {
-                showMessage('📋 URL copiato! Incollalo nel Browser Source di Streamlabs.');
+                showMessage('📋 URL principale copiato! Se non funziona, copia quello alternativo.');
+            });
+        }
+        
+        // Copia URL alternativo
+        function copiaURLAlternativo() {
+            const url = generaURLAlternativo();
+            navigator.clipboard.writeText(url).then(() => {
+                showMessage('📋 URL alternativo copiato!');
             });
         }
         

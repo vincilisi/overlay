@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlay Twitch - Stardew Valley Garden (Streamlabs)</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="overlay-container">
+        <!-- Cornice principale -->
+        <div class="main-frame">
+            <!-- Angoli decorativi -->
+            <div class="corner top-left">🌱</div>
+            <div class="corner top-right">🍄</div>
+            <div class="corner bottom-left">🥕</div>
+            <div class="corner bottom-right">🌻</div>
+            
+            <!-- Bordi decorativi -->
+            <div class="border-decoration top">
+                <span class="plant-icon">🌿</span>
+                <span class="plant-icon">🍅</span>
+                <span class="plant-icon">🌽</span>
+                <span class="plant-icon">🥬</span>
+                <span class="plant-icon">🌶️</span>
+            </div>
+            
+            <div class="border-decoration bottom">
+                <span class="plant-icon">🥔</span>
+                <span class="plant-icon">🍆</span>
+                <span class="plant-icon">🥒</span>
+                <span class="plant-icon">🌰</span>
+                <span class="plant-icon">🍓</span>
+            </div>
+            
+            <div class="border-decoration left">
+                <span class="plant-icon vertical">🌸</span>
+                <span class="plant-icon vertical">🌺</span>
+                <span class="plant-icon vertical">🌼</span>
+            </div>
+            
+            <div class="border-decoration right">
+                <span class="plant-icon vertical">🏵️</span>
+                <span class="plant-icon vertical">🌷</span>
+                <span class="plant-icon vertical">🌹</span>
+            </div>
+        </div>
+        
+        <!-- Sezione webcam -->
+        <div class="webcam-frame">
+            <div class="webcam-border">
+                <div class="webcam-title">🧑‍🌾 La Mia Fattoria 🧑‍🌾</div>
+            </div>
+        </div>
+        
+        <!-- Pannello informazioni -->
+        <div class="info-panel">
+            <div class="info-title">📱 Info Giardino 📱</div>
+            <div class="info-content">
+                <div class="stat-item">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-text">Livello Farming</span>
+                    <span class="stat-value" id="farming-level">10</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-text">Monete</span>
+                    <span class="stat-value" id="coins">999,999g</span>
+                </div>
+                <div class="stat-item seeds-item" id="seeds-item">
+                    <span class="stat-icon">🌱</span>
+                    <span class="stat-text">Semi Piantati</span>
+                    <span class="stat-value" id="seeds">42</span>
+                    <span class="expand-arrow">▼</span>
+                </div>
+                
+                <!-- Mini box espandibile per i semi -->
+                <div class="seeds-box" id="seeds-box">
+                    <div class="seeds-box-header">
+                        <span class="seeds-title">🌾 I Miei Semi 🌾</span>
+                        <span class="seeds-close" id="seeds-close">✕</span>
+                    </div>
+                    <div class="seeds-grid" id="seeds-grid">
+                        <!-- I semi verranno aggiunti dinamicamente dal JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sezione ricette -->
+        <div class="recipe-panel">
+            <div class="recipe-title" id="recipe-title">👩‍🍳 Ricetta del Giorno 👩‍🍳</div>
+            <div class="recipe-content">
+                <div class="recipe-item">
+                    <span class="recipe-icon" id="recipe-icon">🥗</span>
+                    <span class="recipe-name" id="recipe-name">Insalata di Stagione</span>
+                </div>
+                <div class="recipe-ingredients" id="recipe-ingredients">
+                    <span class="ingredient" id="ingredient1">🥬 Lattuga</span>
+                    <span class="ingredient" id="ingredient2">🍅 Pomodoro</span>
+                    <span class="ingredient" id="ingredient3">🥒 Cetriolo</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifiche animate -->
+        <div class="notification-area">
+            <div class="notification hidden" id="follow-notification">
+                <span class="notif-icon">🎉</span>
+                <span class="notif-text" id="notification-text">Nuovo Follower!</span>
+                <span class="notif-icon">🌟</span>
+            </div>
+        </div>
+        
+        <!-- Decorazioni fluttuanti -->
+        <div class="floating-decorations">
+            <div class="floating-item" style="--delay: 0s; --x: 10%;">🦋</div>
+            <div class="floating-item" style="--delay: 2s; --x: 70%;">🐝</div>
+            <div class="floating-item" style="--delay: 4s; --x: 40%;">🍃</div>
+            <div class="floating-item" style="--delay: 6s; --x: 80%;">✨</div>
+            <div class="floating-item" style="--delay: 8s; --x: 20%;">🌸</div>
+        </div>
+        
+        <!-- Barra del tempo -->
+        <div class="weather-bar">
+            <div class="weather-item">
+                <span class="weather-icon" id="weather-icon">☀️</span>
+                <span class="weather-text" id="weather-text">Primavera - Giorno 15</span>
+            </div>
+            <div class="weather-temp" id="weather-temp">22°C</div>
+        </div>
+        
+        <!-- Debug info (nascosta) -->
+        <div id="debug" style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; font-size: 12px; border-radius: 5px; display: none; z-index: 9999;">
+            <div>Mode: <span id="debug-mode">-</span></div>
+            <div>Data: <span id="debug-data">-</span></div>
+        </div>
+    </div>
+    
+    <script src="main.js"></script>
+    <script src="configurator.js"></script>
+    <script>
+        console.log('🔄 Overlay Streamlabs inizializzato');
+        
+        let isDebugMode = false;
+        
+        // Attiva debug con Ctrl+D
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'd') {
+                isDebugMode = !isDebugMode;
+                document.getElementById('debug').style.display = isDebugMode ? 'block' : 'none';
+            }
+        });
+        
+        // Funzione per decodificare Base64
+        function decodeBase64(str) {
+            try {
+                return JSON.parse(atob(str));
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // Funzione per ottenere dati dall'hash
+        function getDataFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                console.log('📍 Hash trovato:', hash);
+                return decodeBase64(hash);
+            }
+            return null;
+        }
+        
+        // Funzione per ottenere parametri URL (fallback)
+        function getURLParams() {
+            const params = new URLSearchParams(window.location.search);
+            const data = {};
+            
+            for (let [key, value] of params) {
+                data[key] = decodeURIComponent(value);
+            }
+            
+            return Object.keys(data).length > 0 ? data : null;
+        }
+        
+        // Funzione per aggiornare l'overlay
+        function updateOverlay(data) {
+            if (!data) return;
+            
+            if (data.seeds !== undefined) document.getElementById('seeds').textContent = data.seeds;
+            if (data.coins) document.getElementById('coins').textContent = data.coins;
+            if (data.farmingLevel) document.getElementById('farming-level').textContent = data.farmingLevel;
+            if (data.weatherIcon) document.getElementById('weather-icon').textContent = data.weatherIcon;
+            if (data.weatherText) document.getElementById('weather-text').textContent = data.weatherText;
+            if (data.weatherTemp) document.getElementById('weather-temp').textContent = data.weatherTemp;
+            if (data.recipeIcon) document.getElementById('recipe-icon').textContent = data.recipeIcon;
+            if (data.recipeName) document.getElementById('recipe-name').textContent = data.recipeName;
+            if (data.ingredient1) document.getElementById('ingredient1').textContent = data.ingredient1;
+            if (data.ingredient2) document.getElementById('ingredient2').textContent = data.ingredient2;
+            if (data.ingredient3) document.getElementById('ingredient3').textContent = data.ingredient3;
+            
+            console.log('✅ Overlay aggiornato con:', data);
+        }
+        
+        // Funzione principale
+        function loadOverlayData() {
+            // Priorità 1: Hash fragment (più compatibile con Streamlabs)
+            let data = getDataFromHash();
+            let mode = 'Hash Fragment';
+            
+            // Priorità 2: URL Parameters
+            if (!data) {
+                data = getURLParams();
+                mode = 'URL Parameters';
+            }
+            
+            // Priorità 3: LocalStorage (fallback)
+            if (!data) {
+                data = JSON.parse(localStorage.getItem('stardew-overlay-data') || '{}');
+                mode = 'LocalStorage';
+            }
+            
+            // Aggiorna debug info
+            if (isDebugMode) {
+                document.getElementById('debug-mode').textContent = mode;
+                document.getElementById('debug-data').textContent = JSON.stringify(data).substring(0, 100) + '...';
+            }
+            
+            updateOverlay(data);
+            console.log('🔍 Modalità caricamento:', mode);
+        }
+        
+        // Carica dati all'avvio
+        loadOverlayData();
+        
+        // Per modalità browser normale, controlla aggiornamenti
+        if (!getDataFromHash() && !getURLParams()) {
+            setInterval(loadOverlayData, 2000);
+        }
+        
+        console.log('🚀 Overlay pronto! Premi Ctrl+D per debug info');
+    </script>
+</body>
+</html>
