@@ -394,7 +394,7 @@ app.get('/health', (req, res) => {
 
 // Serve la pagina principale
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'live-platform.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/live', (req, res) => {
