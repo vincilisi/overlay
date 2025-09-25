@@ -614,7 +614,10 @@
                 infoDiv.style.display = 'block';
                 
                 if (twitchAuth && twitchAuth.user) {
-                    document.getElementById('twitch-channel').textContent = twitchAuth.user.display_name;
+                    const channelElement = document.getElementById('twitch-channel');
+                    if (channelElement) {
+                        channelElement.textContent = twitchAuth.user.display_name;
+                    }
                     console.log('✅ Status Twitch aggiornato per:', twitchAuth.user.display_name);
                 }
             } else {
