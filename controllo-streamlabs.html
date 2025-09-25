@@ -282,26 +282,60 @@
         
         // Genera URL personalizzato per Streamlabs (Hash Fragment)
         function generaURLStreamlabs() {
-            const baseURL = window.location.origin + '/streamlabs.html';
-            const data = raccogliDati();
-            const encoded = btoa(JSON.stringify(data));
-            return baseURL + '#' + encoded;
+            try {
+                const baseURL = window.location.origin + '/streamlabs.html';
+                const data = raccogliDati();
+                const encoded = btoa(JSON.stringify(data));
+                const fullURL = baseURL + '#' + encoded;
+                console.log('🔗 URL Streamlabs generato:', fullURL);
+                return fullURL;
+            } catch (error) {
+                console.error('❌ Errore generazione URL Streamlabs:', error);
+                return 'Errore nella generazione URL';
+            }
         }
         
         // Genera URL alternativo (URL Parameters)
         function generaURLAlternativo() {
-            const baseURL = window.location.origin + '/index.html';
-            const data = raccogliDati();
-            const params = new URLSearchParams(data);
-            return baseURL + '?' + params.toString();
+            try {
+                const baseURL = window.location.origin + '/index.html';
+                const data = raccogliDati();
+                const params = new URLSearchParams(data);
+                const fullURL = baseURL + '?' + params.toString();
+                console.log('🔗 URL Alternativo generato:', fullURL);
+                return fullURL;
+            } catch (error) {
+                console.error('❌ Errore generazione URL alternativo:', error);
+                return 'Errore nella generazione URL';
+            }
         }
         
         // Aggiorna gli URL mostrati
         function aggiornaURLMostrato() {
-            const url = generaURLStreamlabs();
-            const altUrl = generaURLAlternativo();
-            document.getElementById('streamlabs-url').textContent = url;
-            document.getElementById('alternative-url').textContent = altUrl;
+            console.log('🔄 Aggiornamento URL...');
+            try {
+                const url = generaURLStreamlabs();
+                const altUrl = generaURLAlternativo();
+                
+                const streamlabsElement = document.getElementById('streamlabs-url');
+                const alternativeElement = document.getElementById('alternative-url');
+                
+                if (streamlabsElement) {
+                    streamlabsElement.textContent = url;
+                    console.log('✅ URL Streamlabs aggiornato');
+                } else {
+                    console.error('❌ Elemento streamlabs-url non trovato');
+                }
+                
+                if (alternativeElement) {
+                    alternativeElement.textContent = altUrl;
+                    console.log('✅ URL Alternativo aggiornato');
+                } else {
+                    console.error('❌ Elemento alternative-url non trovato');
+                }
+            } catch (error) {
+                console.error('❌ Errore aggiornamento URL:', error);
+            }
         }
         
         // Funzione per mostrare messaggi di stato
@@ -318,20 +352,22 @@
         
         // Raccoglie tutti i dati dai form
         function raccogliDati() {
-            return {
-                seeds: document.getElementById('seeds').value,
-                coins: document.getElementById('coins').value,
-                farmingLevel: document.getElementById('farming-level').value,
-                weatherIcon: document.getElementById('weather-icon').value,
-                weatherText: document.getElementById('weather-text').value,
-                weatherTemp: document.getElementById('weather-temp').value,
-                recipeIcon: document.getElementById('recipe-icon').value,
-                recipeName: document.getElementById('recipe-name').value,
-                ingredient1: document.getElementById('ingredient1').value,
-                ingredient2: document.getElementById('ingredient2').value,
-                ingredient3: document.getElementById('ingredient3').value,
+            const data = {
+                seeds: document.getElementById('seeds')?.value || '42',
+                coins: document.getElementById('coins')?.value || '999,999g',
+                farmingLevel: document.getElementById('farming-level')?.value || '10',
+                weatherIcon: document.getElementById('weather-icon')?.value || '☀️',
+                weatherText: document.getElementById('weather-text')?.value || 'Primavera - Giorno 15',
+                weatherTemp: document.getElementById('weather-temp')?.value || '22°C',
+                recipeIcon: document.getElementById('recipe-icon')?.value || '🥗',
+                recipeName: document.getElementById('recipe-name')?.value || 'Insalata di Stagione',
+                ingredient1: document.getElementById('ingredient1')?.value || '🥬 Lattuga',
+                ingredient2: document.getElementById('ingredient2')?.value || '🍅 Pomodoro',
+                ingredient3: document.getElementById('ingredient3')?.value || '🥒 Cetriolo',
                 timestamp: Date.now()
             };
+            console.log('📊 Dati raccolti:', data);
+            return data;
         }
         
         // Salva dati (localStorage + aggiorna URL)
@@ -423,9 +459,17 @@
         }
         
         // Inizializzazione
-        caricaDatiForm();
-        aggiornaURLMostrato();
-        showMessage('🚀 Pannello di controllo pronto! Usa l\'URL sopra per Streamlabs.');
+        window.addEventListener('load', function() {
+            console.log('🔄 Inizializzazione pannello controllo...');
+            caricaDatiForm();
+            aggiornaURLMostrato();
+            showMessage('🚀 Pannello di controllo pronto! Usa l\'URL sopra per Streamlabs.');
+        });
+        
+        // Fallback se window.load non funziona
+        setTimeout(() => {
+            aggiornaURLMostrato();
+        }, 1000);
     </script>
 </body>
 </html>
