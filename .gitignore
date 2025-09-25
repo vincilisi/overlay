@@ -1,0 +1,12 @@
+# File non necessari per Netlify
+node_modules/
+*.backup
+websocket-server.js
+package*.json
+start.bat
+test-*.html
+
+# File di sistema
+.DS_Store
+Thumbs.db
+*.log
